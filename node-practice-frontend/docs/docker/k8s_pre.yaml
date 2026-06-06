@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: youcan-h5
+  namespace: yingke-yc-pre
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: youcan-h5
+
+  template:
+    metadata:
+      labels:
+        app: youcan-h5
+    spec:
+      containers:
+        - name: youcan-h5
+          image: swr.cidc-rp-2006.joint.cmecloud.cn/aplus-dev/h5/pre/youcan-h5:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+      imagePullSecrets:
+        - name: harbor-secret
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: youcan-h5
+  namespace: yingke-yc-pre
+spec:
+  type: ClusterIP
+  selector:
+    app: youcan-h5
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

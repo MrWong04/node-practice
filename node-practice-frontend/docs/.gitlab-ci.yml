@@ -1,0 +1,116 @@
+########################### 测试环境 ##########################
+# npm 打包
+test-npm-build-h5:
+  stage: test-npm-build
+  image: $IMAGE_NODE
+  script:
+    - echo "start $PROJECT_NAME_YC_H5 npm build....."
+    # 开始编译
+    - cd youcan-h5
+    # - cp docker/npmrc ~/.npmrc
+    - npm install --legacy-peer-deps
+    - npm run build
+    - echo "build ok" && ls -al ./dist
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - youcan-h5/dist
+      - youcan-h5/docker
+  only:
+    refs:
+      - test
+  tags:
+    - npm
+
+# 打 docker 镜像 + 部署 image到服务器
+test-image-deploy-h5:
+  stage: test-image-deploy
+  image: $IMAGE_DOCKER
+  script:
+    - echo "start docker image build..."
+    - docker login --username=$CI_ECLOUD_USER --password=$CI_ECLOUD_PASSWORD $CI_ECLOUD_REGISTRY
+    - docker build -f ./youcan-h5/docker/Dockerfile
+      -t $CI_ECLOUD_REGISTRY/aplus-dev/h5/$CI_COMMIT_BRANCH/$PROJECT_NAME_YC_H5:latest .
+    - docker push $CI_ECLOUD_REGISTRY/aplus-dev/h5/$CI_COMMIT_BRANCH/$PROJECT_NAME_YC_H5:latest
+    - echo "start deplooy..."
+    - kubectl --kubeconfig ~/.kube/config-ydy delete -f ./youcan-h5/docker/k8s_test.yaml -n $K8S_NAMESPACE_TEST && true=0 || false=1
+    - sleep 3
+    - kubectl --kubeconfig ~/.kube/config-ydy apply -f ./youcan-h5/docker/k8s_test.yaml -n $K8S_NAMESPACE_TEST
+    - echo "deploy ok..."
+    - cd ..
+  only:
+    refs:
+      - test
+  tags:
+    - docker
+
+########################### 预发布环境 ##########################
+# npm 打包
+pre-npm-build-h5:
+  stage: pre-npm-build
+  image: $IMAGE_NODE
+  script:
+    - echo "start $PROJECT_NAME_YC_H5 npm build....."
+    # 开始编译
+    - cd youcan-h5
+    - cp docker/npmrc ~/.npmrc
+    - npm install --legacy-peer-deps
+    - npm run build
+    - echo "build ok" && ls -al ./dist
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - youcan-h5/dist
+      - youcan-h5/docker
+  only:
+    refs:
+      - pre
+  tags:
+    - npm
+
+# 打 docker 镜像 + 部署 image到服务器
+pre-image-deploy-h5:
+  stage: pre-image-deploy
+  image: $IMAGE_DOCKER
+  script:
+    - echo "start docker image build..."
+    - docker login --username=$CI_ECLOUD_USER --password=$CI_ECLOUD_PASSWORD $CI_ECLOUD_REGISTRY
+    - docker build -f ./youcan-h5/docker/Dockerfile
+      -t $CI_ECLOUD_REGISTRY/aplus-dev/h5/$CI_COMMIT_BRANCH/$PROJECT_NAME_YC_H5:latest .
+    - docker push $CI_ECLOUD_REGISTRY/aplus-dev/h5/$CI_COMMIT_BRANCH/$PROJECT_NAME_YC_H5:latest
+      # 生成预打包标记文件，供下一步打版本 tag 时使用.
+    - mkdir -p /cache/e-commerce-mini-program/tags && touch /cache/e-commerce-mini-program/tags/$PROJECT_NAME_YC_H5
+    - echo "start deploy..."
+    - kubectl --kubeconfig ~/.kube/config-ydy delete -f ./youcan-h5/docker/k8s_pre.yaml -n $K8S_NAMESPACE_YK_PRE && true=0 || false=1
+    - sleep 3
+    - kubectl --kubeconfig ~/.kube/config-ydy apply -f ./youcan-h5/docker/k8s_pre.yaml -n $K8S_NAMESPACE_YK_PRE
+    - echo "deploy ok..."
+    - cd ..
+  only:
+    refs:
+      - pre
+  tags:
+    - docker
+########################### 生产环境 ##########################
+# npm 打包
+# prod-npm-build-youcan-h5:
+#   stage: prod-npm-build
+#   image: $IMAGE_NODE
+#   script:
+#     - echo "start $PROJECT_NAME_YC_H5 npm build....."
+#     # 开始编译
+#     - cd youcan-h5
+#     - cp docker/npmrc ~/.npmrc
+#     - npm install --legacy-peer-deps
+#     - npm run build
+#     - echo "build ok" && ls -al ./dist
+#   artifacts:
+#     expire_in: 1 week
+#     paths:
+#       - youcan-h5/dist
+#       - youcan-h5/docker
+#   only:
+#     refs:
+#       - release
+#   tags:
+#     - npm

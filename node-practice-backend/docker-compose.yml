@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    container_name: node-practice-api
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=your-production-secret-key-change-me
+    volumes:
+      # 持久化 SQLite 数据库文件
+      - ./dev.db:/app/dev.db
+    restart: unless-stopped
+
+  # 如果要搭配 Nginx 反向代理，可以取消下面的注释
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: node-practice-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./dist:/usr/share/nginx/html:ro
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped

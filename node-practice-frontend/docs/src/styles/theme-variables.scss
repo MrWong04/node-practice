@@ -1,0 +1,88 @@
+:root {
+  // 主色调 - 明亮的橙色
+  --primary-color: #FF761A;  // 基础橙色
+  --primary-color-hover: #FF8B3D;  // 较亮 +13% 亮度
+  --primary-color-active: #E66400;  // 较暗 -10% 亮度
+  --primary-color-outline: rgba(255, 118, 26, 0.2);  // 透明度20%
+
+  // 主色调的变体
+  --primary-color-light: #FFE8D6;  // 超浅色背景
+  --primary-color-lighter: #FFC499;  // 浅色
+  --primary-color-dark: #CC5E14;    // 深色
+  --primary-color-darker: #993F00;   // 超深色
+  
+  // 渐变色
+  --primary-gradient: linear-gradient(90deg, var(--primary-color) 0%, #FFB23D 100%);  // 橙色渐变
+  --primary-gradient-light: linear-gradient(90deg, var(--primary-color) 3%, #FFE0B3 100%);  // 浅色渐变
+  
+  // 功能色
+  --success-color: #52C41A;    // 成功色
+  --warning-color: #FAAD14;    // 警告色
+  --error-color: #FF4D4F;      // 错误色
+  --info-color: #FF761A;       // 信息色
+  
+  // 文字颜色
+  --text-primary: #333333;     // 主要文字
+  --text-secondary: #666666;   // 次要文字
+  --text-disabled: #999999;    // 禁用文字
+  --text-white: #FFFFFF;       // 白色文字
+  
+  // 边框颜色
+  --border-color: #E5E5E5;     // 一般边框
+  --border-color-light: #F0F0F0; // 浅色边框
+  --primary-border: 1px solid var(--primary-color);  // 主题边框
+  
+  // 背景色
+  --bg-primary: var(--primary-color);  // 主题背景
+  --bg-light: #F5F5F5;        // 浅色背景
+  --bg-lighter: #FAFAFA;      // 更浅背景
+  --bg-white: #FFFFFF;        // 白色背景
+  
+  // 投影
+  --box-shadow: 0 2px 8px rgba(255, 118, 26, 0.15);  // 基于主题色的投影
+  --box-shadow-light: 0 2px 4px rgba(255, 118, 26, 0.1);  // 轻量投影
+  
+  // 特殊状态
+  --disabled-bg: #F5F5F5;     // 禁用背景
+  --disabled-color: #BFBFBF;   // 禁用文字
+  --mask-bg: rgba(0, 0, 0, 0.45);  // 遮罩背景
+}
+
+// 暗黑模式
+html[data-theme='dark']:root {
+  // 主色调适配
+  --primary-color: #FF8533;  // 暗色模式下稍微提亮
+  --primary-color-hover: #FF9957;
+  --primary-color-active: #E67300;
+  --primary-color-outline: rgba(255, 133, 51, 0.2);
+  
+  // 背景色适配
+  --bg-primary: #141414;
+  --bg-light: #1F1F1F;
+  --bg-lighter: #262626;
+  --bg-white: #1F1F1F;
+  
+  // 文字颜色适配
+  --text-primary: #FFFFFF;
+  --text-secondary: #CCCCCC;
+  --text-disabled: #666666;
+  
+  // 边框颜色适配
+  --border-color: #434343;
+  --border-color-light: #303030;
+  
+  // 投影适配
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --box-shadow-light: 0 2px 4px rgba(0, 0, 0, 0.2);
+  
+  // 功能色适配
+  --success-color: #49AA19;
+  --warning-color: #D89614;
+  --error-color: #D32029;
+  --info-color: #177DDC;
+  
+  // 特殊状态适配
+  --disabled-bg: #262626;
+  --disabled-color: #595959;
+  --mask-bg: rgba(0, 0, 0, 0.65);
+} 

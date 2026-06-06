@@ -1,0 +1,168 @@
+/* vantUI 全局重置组件变量 */
+:root:root {
+  /* 基础尺寸变量 */
+
+
+  --van-primary-color: #FF6B00;
+
+  --van-sidebar-width: 204px;
+  
+  /* 基础尺寸适配2倍 */
+  --van-padding-xs: 16px;
+  --van-padding-sm: 24px;
+  --van-padding-md: 32px;
+  --van-padding-lg: 36px;
+  --van-padding-xl: 40px;
+  
+  /* 字体大小适配2倍 */
+  --van-font-size-xs: 20px;
+  --van-font-size-sm: 24px;
+  --van-font-size-md: 28px;
+  --van-font-size-lg: 32px;
+  
+  /* 图标尺寸适配2倍 */
+  --van-icon-size-xs: 32px;
+  --van-icon-size-sm: 36px;
+  --van-icon-size-md: 40px;
+  --van-icon-size-lg: 44px;
+  
+  /* 边框圆角适配2倍 */
+  --van-radius-sm: 8px;
+  --van-radius-md: 16px;
+  --van-radius-lg: 24px;
+  --van-radius-max: 32px;
+  
+  /* 高度适配2倍 */
+  --van-cell-line-height: 48px;
+  --van-cell-vertical-padding: 20px;
+  --van-cell-horizontal-padding: 32px;
+  --van-cell-font-size: 28px;
+  
+  /* 按钮尺寸适配2倍 */
+  --van-button-default-height: 88px;
+  --van-button-default-font-size: 32px;
+  --van-button-small-height: 64px;
+  --van-button-small-font-size: 24px;
+  --van-button-mini-height: 48px;
+  --van-button-mini-font-size: 20px;
+  
+  /* 弹出层适配 */
+  --van-popup-round-radius: 32px;
+}
+
+/* 搜索框样式适配 */
+.van-search {
+  padding: 20px 32px !important;
+  
+  .van-search__content {
+    height: 72px !important;
+    padding: 0 24px !important;
+    border-radius: 36px !important;
+  }
+  
+  .van-field__left-icon {
+    margin-right: 12px !important;
+  }
+  
+  .van-field__control {
+    font-size: 28px !important;
+  }
+}
+
+/* 标签页适配 */
+.van-tabs {
+  .van-tabs__wrap {
+    height: 88px !important;
+  }
+  
+  .van-tab {
+    font-size: 28px !important;
+    line-height: 88px !important;
+  }
+  
+  .van-tabs__line {
+    height: 8px !important;
+    border-radius: 3px !important;
+    bottom: 38px !important;
+  }
+}
+
+/* 弹窗适配 */
+.van-dialog {
+  width: 640px !important;
+  border-radius: 24px !important;
+  
+  .van-dialog__header {
+    font-size: 32px !important;
+    padding-top: 40px !important;
+  }
+  
+  .van-dialog__content {
+    padding: 40px 36px !important;
+  }
+  
+  .van-dialog__footer {
+    padding: 24px 0 !important;
+  }
+  
+  .van-dialog__confirm, 
+  .van-dialog__cancel {
+    font-size: 32px !important;
+  }
+}
+
+/* 轻提示适配 */
+.van-toast {
+  min-width: 160px !important;
+  font-size: 28px !important;
+  padding: 24px !important;
+}
+
+.van-toast {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 底部标签栏适配 */
+.van-tabbar {
+  height: 120px !important;
+  box-shadow: 0 0 4px 1px rgba(197, 194, 194, 0.4);
+  
+  .van-tabbar-item {
+    font-size: 24px !important;
+    
+    .van-tabbar-item__icon {
+      font-size: 48px !important;
+      margin-bottom: 8px !important;
+    }
+
+    // .van-tabbar-item__icon img {
+    //   width: 48px!important;
+    //   height: 48px!important;
+    // }
+  }
+}
+
+/* 弹出选择器适配 */
+.van-picker {
+  .van-picker__title {
+    font-size: 32px !important;
+    line-height: 88px !important;
+  }
+  
+  .van-picker-column__item {
+    font-size: 28px !important;
+    line-height: 88px !important;
+    height: 88px !important;
+  }
+  
+  .van-picker__confirm, 
+  .van-picker__cancel {
+    font-size: 28px !important;
+    padding: 0 32px !important;
+  }
+}
+
+/* 指定的弹窗样式 */
+.logout_dialog {
+  width: 550px !important;
+}

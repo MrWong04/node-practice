@@ -1,0 +1,41 @@
+// 重置 vant 样式
+
+/**
+* 导航栏
+*/
+.van-nav-bar {
+    .van-nav-bar__left {
+        .van-icon {
+            color: #202020;
+        }
+        .van-nav-bar__text {
+            color: #000000;
+            font-size: 32px;
+        }
+    }
+    .van-nav-bar__right {
+        .van-nav-bar__text {
+            color: #F62C30;
+            font-size: 32px;
+        }
+    }
+}
+.van-toast--text {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.my-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    transition: opacity 0.3s ease-out;
+}
+.my-overlay-enter-from,
+.my-overlay-leave-to {
+    opacity: 0;
+}
+  
