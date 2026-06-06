@@ -1,4 +1,0 @@
-//$px为需要转换的字号
-@function pxToRem($px) {
-    @return $px / 75 * 1rem;
-}
