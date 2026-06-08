@@ -1,9 +1,10 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import homeRoutes from './modules/home'
+import prospectRoutes from './modules/prospect'
+import backgroundRoutes from './modules/background'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
-  routes: [...homeRoutes],
+  routes: [...prospectRoutes, ...backgroundRoutes],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition
@@ -13,7 +14,7 @@ const router = createRouter({
   }
 })
 
-const DEFAULT_TITLE = '后台管理系统'
+const DEFAULT_TITLE = '我的blog'
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title ? `${to.meta.title} - ${DEFAULT_TITLE}` : DEFAULT_TITLE
   next()
