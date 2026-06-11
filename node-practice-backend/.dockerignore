@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------------------
+# .dockerignore — 告诉 Docker 构建时忽略哪些文件，减小镜像体积
+# 作用类似于 .gitignore，但专门用于 docker build 时的上下文
+# ---------------------------------------------------------------------------
+
+# Node.js 依赖
+# 构建时会重新执行 npm ci，不需要复制宿主机的 node_modules
+node_modules/
+
+# TypeScript 编译产物
+# 源码在镜像内重新编译，不需要复制宿主机的 dist
+dist/
+
+# Git 版本控制目录
+# 与运行时无关，且体积可能很大
+.git/
+
+# 本地环境变量文件
+# 包含敏感信息，不应进入镜像；生产环境通过 docker-compose 注入
+.env
+.env.*
+
+# 本地 SQLite 数据库（如果使用 SQLite）
+# 数据库是运行时数据，不应打包进镜像；通过 volumes 挂载
+*.db
+*.db-journal
+
+# 日志文件
+coverage/
+*.log
+logs/
+
+# 编辑器配置
+.vscode/
+.idea/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 文档和测试（如果镜像不需要）
+# 若生产镜像不需要测试代码和文档，可取消注释
+# tests/
+# docs/
+
+# Docker 相关文件（可选）
+# 如果不希望在构建上下文包含 docker-compose 配置
+# docker-compose.yml
+# Dockerfile

@@ -1,21 +1,105 @@
-version: "3.8"
+# ===========================================================================
+# docker-compose.yml — Docker Compose 服务编排配置
+# ===========================================================================
+# 定义项目运行所需的全部服务: API 应用 + MySQL 数据库
+# 使用方式: docker-compose up -d
+# ===========================================================================
 
+# Compose 文件版本，3.8 支持最新的 Docker 特性
+version: '3.8'
+
+# ---------------------------------------------------------------------------
+# 服务定义
+# ---------------------------------------------------------------------------
 services:
+  # -------------------------------------------------------------------------
+  # API 服务 — Node.js + Express 后端应用
+  # -------------------------------------------------------------------------
   api:
+    # 构建配置: 使用当前目录的 Dockerfile 构建镜像
     build: .
+
+    # 容器名称，方便通过 docker 命令直接引用
     container_name: node-practice-api
+
+    # 端口映射: 宿主机端口:容器端口
+    # 将容器内的 3002 端口映射到宿主机的 3002 端口
     ports:
-      - "3002:3002"
+      - '3002:3002'
+
+    # 环境变量: 覆盖容器内的 process.env
     environment:
+      # NODE_ENV — 运行环境，production 会关闭详细日志
       - NODE_ENV=production
-      - DATABASE_URL=file:./dev.db
+
+      # DATABASE_URL — MySQL 连接字符串
+      # 使用服务名 "db" 作为主机名（Docker 内部 DNS 自动解析）
+      # 与 prisma/schema.prisma 中的 provider=mysql 保持一致
+      - DATABASE_URL=mysql://root:node_practice_password@db:3306/node_practice
+
+      # JWT_SECRET — JWT 签名密钥（生产环境务必修改为强随机字符串）
       - JWT_SECRET=your-production-secret-key-change-me
-    volumes:
-      # 持久化 SQLite 数据库文件
-      - ./dev.db:/app/dev.db
+
+      # PORT — 应用监听端口，与 Dockerfile 中的 EXPOSE 保持一致
+      - PORT=3002
+
+    # 数据卷挂载: 持久化 SQLite 数据库文件（如果切换到 SQLite 时使用）
+    # 当前使用 MySQL，此行保留以备后续切换
+    # volumes:
+    #   - ./dev.db:/app/dev.db
+
+    # 服务依赖: 确保 db 服务先启动后再启动 api
+    depends_on:
+      - db
+
+    # 重启策略: 除非手动停止，否则容器异常退出时自动重启
     restart: unless-stopped
 
-  # 如果要搭配 Nginx 反向代理，可以取消下面的注释
+  # -------------------------------------------------------------------------
+  # 数据库服务 — MySQL 8.0
+  # -------------------------------------------------------------------------
+  db:
+    # 使用官方 MySQL 8.0 镜像
+    image: mysql:8.0
+
+    # 容器名称
+    container_name: node-practice-db
+
+    # 端口映射: 宿主机 3306 映射到容器 3306
+    # 方便宿主机上的 MySQL 客户端（如 DataGrip、Navicat）直接连接调试
+    ports:
+      - '3306:3306'
+
+    # 环境变量: MySQL 初始化配置
+    environment:
+      # MYSQL_ROOT_PASSWORD — root 用户密码
+      # 必须与 api 服务中的 DATABASE_URL 里的密码一致
+      - MYSQL_ROOT_PASSWORD=node_practice_password
+
+      # MYSQL_DATABASE — 启动时自动创建的数据库名
+      - MYSQL_DATABASE=node_practice
+
+      # MySQL 8.0 认证插件兼容性（旧版 MySQL 客户端连接时可能需要）
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+
+    # 数据卷: 持久化 MySQL 数据
+    # 使用 Docker 命名卷，即使容器删除数据也不会丢失
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 健康检查: 确保 MySQL 完全启动后再让依赖服务启动
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------------------
+  # 可选: Nginx 反向代理（已注释，需要时取消注释）
+  # -------------------------------------------------------------------------
   # nginx:
   #   image: nginx:alpine
   #   container_name: node-practice-nginx
@@ -28,3 +112,11 @@ services:
   #   depends_on:
   #     - api
   #   restart: unless-stopped
+
+# ---------------------------------------------------------------------------
+# 命名卷定义
+# ---------------------------------------------------------------------------
+# 声明所有命名卷，确保数据持久化
+volumes:
+  mysql_data:
+    # 不指定 driver 则使用默认的 local 驱动

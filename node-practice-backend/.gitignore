@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------------------
+# .gitignore — 告诉 Git 哪些文件/目录不应被纳入版本控制
+# ---------------------------------------------------------------------------
+
+# Node.js 依赖目录
+# npm install 后会自动生成，内含所有第三方包，体积大且不应提交
+node_modules/
+
+# TypeScript 编译输出目录
+# 由 tsc 生成，源代码已提交，产物应由 CI/CD 或部署时重新构建
+dist/
+
+# Prisma SQLite 数据库文件（开发环境使用 SQLite 时）
+# 数据库文件含运行时数据，不应提交到 Git
+*.db
+*.db-journal
+
+# Prisma 迁移锁文件（多环境时由各自环境管理）
+# 通常 migration_lock.toml 可以提交，但如果使用 SQLite 可忽略
+# 这里保留注释供参考，如需忽略可取消下一行注释
+# prisma/migrations/migration_lock.toml
+
+# 环境变量文件
+# 包含敏感信息（密码、密钥、数据库 URL），绝对不应提交
+.env
+.env.local
+.env.*.local
+
+# 测试覆盖率报告
+# 由测试工具（如 Vitest、Jest）生成，属于 CI 产物
+coverage/
+
+# 日志文件
+# 运行时产生的日志，不应纳入版本控制
+*.log
+logs/
+
+# 操作系统生成的文件
+# macOS 文件夹元数据文件
+.DS_Store
+# Windows 缩略图缓存
+Thumbs.db
+
+# 编辑器/IDE 配置
+# VSCode 用户级本地配置（不含共享的 .vscode/settings.json）
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# JetBrains IDE (WebStorm, IntelliJ) 配置目录
+.idea/
+
+# 临时文件
+# 编辑器临时备份文件
+*.swp
+*.swo
+*~
+
+# TypeScript 缓存
+# TypeScript 增量编译缓存
+*.tsbuildinfo
+
+# Docker 持久化数据卷（如果本地挂载）
+# 防止误提交 Docker 运行时的持久化数据
+docker-data/

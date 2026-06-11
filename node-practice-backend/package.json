@@ -11,7 +11,12 @@
     "db:read": "tsx tests/read-db.js",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "lint": "eslint . --ext .ts,.js --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "format": "prettier --write \"src/**/*.{ts,js,json,md}\" \"tests/**/*.{ts,js}\" \"prisma/**/*.prisma\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json,md}\" \"tests/**/*.{ts,js}\" \"prisma/**/*.prisma\"",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "express",
@@ -23,6 +28,10 @@
   ],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
@@ -30,12 +39,18 @@
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.26.0",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.2",
+    "eslint": "^9.26.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.0",
+    "prettier": "^3.5.3",
     "prisma": "^6.19.3",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.32.0"
   }
 }
