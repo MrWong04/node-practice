@@ -9,21 +9,7 @@
         <el-menu-item index="/background/content">内容</el-menu-item>
         <el-menu-item index="/background/system">系统</el-menu-item>
       </el-menu>
-      <div class="header-right">
-        <el-dropdown>
-          <span class="user-info">
-            <el-avatar :size="28" :icon="UserFilled" />
-            <span class="user-name">管理员</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item>个人中心</el-dropdown-item>
-              <el-dropdown-item divided>退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
+      <HeaderUser name="管理员" />
     </header>
 
     <div class="background-body">
@@ -67,7 +53,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { UserFilled, ArrowDown, DataLine, Document, Setting } from '@element-plus/icons-vue'
+import { DataLine, Document, Setting } from '@element-plus/icons-vue'
+import HeaderUser from '@/components/HeaderUser/index.vue'
 
 const route = useRoute()
 
@@ -111,22 +98,6 @@ const sideActiveIndex = computed(() => route.path)
     flex: 1;
     margin-left: 32px;
     border-bottom: none;
-  }
-
-  .header-right {
-    flex-shrink: 0;
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      color: #333;
-
-      .user-name {
-        font-size: 14px;
-      }
-    }
   }
 }
 

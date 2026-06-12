@@ -7,6 +7,7 @@
         <el-menu-item index="/category">分类</el-menu-item>
         <el-menu-item index="/archive">归档</el-menu-item>
       </el-menu>
+      <HeaderUser name="访客" />
     </header>
 
     <main class="main-content">
@@ -18,6 +19,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import HeaderUser from '@/components/HeaderUser/index.vue'
 
 const route = useRoute()
 
@@ -38,7 +40,7 @@ const activeIndex = computed(() => {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 40px;
+  padding: 0 24px 0 40px;
   background-color: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: sticky;
@@ -54,6 +56,7 @@ const activeIndex = computed(() => {
 
   .top-menu {
     margin-left: 40px;
+    flex: 1;
     border-bottom: none;
   }
 }

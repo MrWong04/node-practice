@@ -1,10 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import prospectRoutes from './modules/prospect'
 import backgroundRoutes from './modules/background'
+import authRoutes from './modules/auth'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
-  routes: [...prospectRoutes, ...backgroundRoutes],
+  routes: [...prospectRoutes, ...backgroundRoutes, ...authRoutes],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition

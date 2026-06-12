@@ -24,3 +24,60 @@ a {
   text-decoration: none;
   color: inherit;
 }
+
+/* 暗色模式全局覆盖 */
+html.dark {
+  body,
+  #app {
+    background-color: #141414;
+    color: var(--el-text-color-primary);
+  }
+  .system-title {
+    color: var(--el-menu-text-color) !important;
+  }
+  .app-container,
+  .prospect-layout,
+  .background-layout {
+    background-color: #0a0a0a;
+    color: var(--el-text-color-primary);
+  }
+
+  .top-header,
+  .background-header {
+    background-color: #141414;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+    .blog-title,
+    .system-title {
+      color: var(--el-text-color-primary);
+    }
+  }
+
+  .background-sidebar {
+    background-color: #141414;
+    border-right-color: #2c2c2c;
+  }
+
+  .main-content,
+  .background-main {
+    color: var(--el-text-color-primary);
+  }
+
+  .header-user {
+    .theme-btn {
+      color: var(--el-text-color-primary);
+
+      &:hover {
+        color: #409eff;
+      }
+    }
+
+    .user-info {
+      color: var(--el-text-color-primary);
+
+      &:hover {
+        background-color: #1f1f1f;
+      }
+    }
+  }
+}
