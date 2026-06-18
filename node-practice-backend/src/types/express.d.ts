@@ -1,4 +1,4 @@
-import { JwtPayload } from "./middleware/auth"
+import { JwtPayload } from '../middleware/auth'
 
 declare global {
   namespace Express {

@@ -29,18 +29,18 @@
 │   浏览器     │ ←──→ │   Nginx     │ ←──→ │  Vue3 SPA   │
 │  (用户)      │      │  (反向代理)  │      │  (前端页面)  │
 └─────────────┘      └──────┬──────┘      └─────────────┘
-                            │
-                     ┌──────▼──────┐
-                     │  Express    │
-                     │  API 服务   │
-                     └──────┬──────┘
-                            │
-              ┌─────────────┼─────────────┐
-              │             │             │
-        ┌─────▼─────┐ ┌────▼────┐ ┌─────▼─────┐
-        │   MySQL   │ │  Redis  │ │  文件存储  │
-        │  (主数据)  │ │ (缓存)  │ │ (图片/头像)│
-        └───────────┘ └─────────┘ └───────────┘
+                             │
+                      ┌──────▼──────┐
+                      │  Express    │
+                      │  API 服务   │
+                      └──────┬──────┘
+                             │
+               ┌─────────────┼─────────────┐
+               │             │             │
+         ┌─────▼─────┐ ┌────▼────┐ ┌─────▼─────┐
+         │   MySQL   │ │  Redis  │ │  文件存储  │
+         │  (主数据)  │ │ (缓存)  │ │ (图片/头像)│
+         └───────────┘ └─────────┘ └───────────┘
 ```
 
 ---
@@ -55,6 +55,16 @@
 | 文章系统 | 文章的增删改查            | ✅   |
 | 数据库   | MySQL + Prisma ORM        | ✅   |
 | 项目结构 | Express + TypeScript 骨架 | ✅   |
+
+### Phase 1.5：架构优化（已完成 ✅）
+
+| 模块     | 功能                                 | 状态 |
+| -------- | ------------------------------------ | ---- |
+| 分层重构 | Controller / Service / Routes 拆分   | ✅   |
+| 统一响应 | 封装 successResponse / errorResponse | ✅   |
+| 异常处理 | 自定义 AppError 及全局错误中间件     | ✅   |
+| 配置集中 | 环境变量统一收归 config/index.ts     | ✅   |
+| 国际化   | 接口报错信息全部中文返回             | ✅   |
 
 ### Phase 2：博客核心功能（下一步）
 
@@ -80,13 +90,13 @@
 
 ### Phase 4：工程化与部署
 
-| 模块 | 功能                      | 优先级 |
-| ---- | ------------------------- | ------ |
-| 测试 | Jest 单元测试 + Supertest | 🟡 中  |
-| 日志 | Winston 结构化日志        | 🟡 中  |
-| 部署 | Docker 容器化             | 🟡 中  |
-| 部署 | CI/CD 自动构建            | 🟢 低  |
-| 监控 | 健康检查 / APM            | 🟢 低  |
+| 模块  | 功能                      | 优先级 |
+| ----- | ------------------------- | ------ |
+| 测试  | Jest 单元测试 + Supertest | 🟡 中  |
+| 日志  | Winston 结构化日志        | 🟡 中  |
+| 部署  | Docker 容器化             | 🟡 中  |
+| CI/CD | 自动构建                  | 🟢 低  |
+| 监控  | 健康检查 / APM            | 🟢 低  |
 
 ---
 
@@ -193,20 +203,20 @@ enum Status {
 
 ### 接口清单
 
-| 方法   | 路径                   | 说明             | 认证     |
-| ------ | ---------------------- | ---------------- | -------- |
-| POST   | /api/auth/register     | 注册             | 公开     |
-| POST   | /api/auth/login        | 登录             | 公开     |
-| GET    | /api/auth/me           | 当前用户         | 需登录   |
-| GET    | /api/posts             | 文章列表（分页） | 公开     |
-| GET    | /api/posts/:slug       | 文章详情         | 公开     |
-| POST   | /api/posts             | 创建文章         | 需管理员 |
-| PUT    | /api/posts/:id         | 更新文章         | 需管理员 |
-| DELETE | /api/posts/:id         | 删除文章         | 需管理员 |
-| GET    | /api/categories        | 分类列表         | 公开     |
-| GET    | /api/tags              | 标签列表         | 公开     |
-| POST   | /api/comments          | 发表评论         | 公开     |
-| GET    | /api/comments?postId=1 | 评论列表         | 公开     |
+| 方法   | 路径                   | 说明             | 认证   |
+| ------ | ---------------------- | ---------------- | ------ |
+| POST   | /api/auth/register     | 注册             | 公开   |
+| POST   | /api/auth/login        | 登录             | 公开   |
+| GET    | /api/auth/me           | 当前用户         | 需登录 |
+| GET    | /api/posts             | 文章列表（分页） | 公开   |
+| GET    | /api/posts/:id         | 文章详情         | 公开   |
+| POST   | /api/posts             | 创建文章         | 需登录 |
+| PUT    | /api/posts/:id         | 更新文章         | 需登录 |
+| DELETE | /api/posts/:id         | 删除文章         | 需登录 |
+| GET    | /api/categories        | 分类列表         | 公开   |
+| GET    | /api/tags              | 标签列表         | 公开   |
+| POST   | /api/comments          | 发表评论         | 公开   |
+| GET    | /api/comments?postId=1 | 评论列表         | 公开   |
 
 ---
 
@@ -228,54 +238,65 @@ enum Status {
 
 ## 开发里程碑
 
-| 里程碑 | 目标                                  | 预计时间  |
-| ------ | ------------------------------------- | --------- |
-| **M1** | 基础 API 完成（认证 + 文章 CRUD）     | ✅ 已完成 |
-| **M2** | 博客核心功能（分类/标签/评论）        | 2 周      |
-| **M3** | Vue3 前端联调（首页/文章页/管理后台） | 2 周      |
-| **M4** | 性能优化（Redis + 索引）              | 1 周      |
-| **M5** | 测试覆盖 + 日志体系                   | 1 周      |
-| **M6** | Docker 部署上线                       | 1 周      |
+| 里程碑   | 目标                                  | 预计时间  |
+| -------- | ------------------------------------- | --------- |
+| **M1**   | 基础 API 完成（认证 + 文章 CRUD）     | ✅ 已完成 |
+| **M1.5** | 架构重构（分层 + 统一错误 + 中文）    | ✅ 已完成 |
+| **M2**   | 博客核心功能（分类/标签/评论）        | 2 周      |
+| **M3**   | Vue3 前端联调（首页/文章页/管理后台） | 2 周      |
+| **M4**   | 性能优化（Redis + 索引）              | 1 周      |
+| **M5**   | 测试覆盖 + 日志体系                   | 1 周      |
+| **M6**   | Docker 部署上线                       | 1 周      |
 
 ---
 
-## 文件结构规划（目标）
+## 文件结构（实际当前）
 
 ```
 node-practice-backend/
-├── src/
-│   ├── app.ts                 ← 入口，挂载路由和中间件
-│   ├── config/                ← 配置（数据库、Redis、JWT）
-│   ├── routes/                ← 路由定义
-│   │   ├── auth.routes.ts
-│   │   ├── post.routes.ts
-│   │   ├── comment.routes.ts
-│   │   └── category.routes.ts
-│   ├── controllers/           ← 控制器（处理请求/响应）
-│   │   ├── auth.controller.ts
-│   │   └── post.controller.ts
-│   ├── services/              ← 业务逻辑层
-│   │   ├── auth.service.ts
-│   │   └── post.service.ts
-│   ├── middleware/            ← 中间件
-│   │   ├── auth.ts
-│   │   ├── error-handler.ts
-│   │   ├── rate-limiter.ts
-│   │   └── validator.ts
-│   ├── utils/                 ← 工具函数
-│   │   ├── jwt.ts
-│   │   ├── bcrypt.ts
-│   │   └── logger.ts
-│   └── types/                 ← 类型声明
-│       └── express.d.ts
 ├── prisma/
 │   ├── schema.prisma
-│   └── client.ts
-├── tests/                     ← 测试
-├── docs/                      ← 文档
+│   ├── client.ts
+│   └── migrations/
+├── src/
+│   ├── app.ts                 ← 入口：挂载中间件、路由、启动服务器
+│   ├── config/
+│   │   └── index.ts           ← 环境变量/全局配置（PORT, JWT_SECRET, SALT_ROUNDS）
+│   ├── routes/
+│   │   ├── auth.ts            ← 认证路由（register, login, me）
+│   │   └── posts.ts           ← 文章路由（CRUD）
+│   ├── controllers/
+│   │   ├── authController.ts  ← 处理 HTTP 请求/响应格式
+│   │   └── postController.ts
+│   ├── services/
+│   │   ├── authService.ts     ← 业务逻辑 + 数据库操作（Prisma）
+│   │   └── postService.ts
+│   ├── middleware/
+│   │   ├── auth.ts            ← JWT 认证中间件 + 生成 Token
+│   │   └── errorHandler.ts    ← 全局错误处理中间件
+│   ├── utils/
+│   │   ├── errors.ts          ← 自定义错误类（AppError, ValidationError...）
+│   │   └── response.ts        ← 统一响应格式（successResponse / errorResponse）
+│   └── types/
+│       └── express.d.ts       ← Express Request 扩展类型（req.user）
+├── tests/
+│   ├── api-auth.test.js
+│   ├── api-memory.test.js
+│   ├── api-prisma.test.js
+│   └── read-db.js
+├── docs/
+│   ├── project-outline.md
+│   ├── backend-roadmap.md
+│   └── api/
+│       ├── auth.md
+│       ├── posts.md
+│       └── README.md
 ├── docker-compose.yml
 ├── Dockerfile
-└── package.json
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── ...
 ```
 
 ---
@@ -294,4 +315,4 @@ node-practice-backend/
 
 ---
 
-_最后更新：2026-06-06_
+_最后更新：2026-06-15_

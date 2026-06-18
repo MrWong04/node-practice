@@ -158,9 +158,11 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { User, Lock, Avatar, Message, Document, Collection } from '@element-plus/icons-vue'
-import { loginApi, registerApi } from '@/api/auth'
+import { loginApi, registerApi, getMeApi } from '@/api/auth'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const activeTab = ref<'login' | 'register'>('login')
 const loading = ref(false)
 const rememberMe = ref(false)
@@ -240,6 +242,11 @@ const handleLogin = async () => {
     const res = await loginApi({ email: loginForm.email, password: loginForm.password })
     if (res.success) {
       localStorage.setItem('blog_token', res.data.token)
+      // 获取当前登录用户信息并写入 store
+      const meRes = await getMeApi()
+      if (meRes.success) {
+        userStore.setUser(meRes.data)
+      }
       ElMessage.success('登录成功')
       router.push('/')
     } else {

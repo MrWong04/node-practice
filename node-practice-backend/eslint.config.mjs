@@ -14,6 +14,10 @@
 // 包含 eslint:recommended 的所有规则，以程序化方式导出
 import js from '@eslint/js'
 
+// globals — 提供 ESLint 环境全局变量定义（如 node, browser, commonjs）
+// 用于声明项目运行环境，避免 no-undef 规则误报内置全局变量
+import globals from 'globals'
+
 // typescript-eslint — TypeScript 官方 ESLint 插件和解析器
 // 包含 @typescript-eslint/recommended 规则集，用于类型感知检查
 import ts from 'typescript-eslint'
@@ -79,6 +83,10 @@ export default [
 
     // languageOptions — 语言解析相关选项
     languageOptions: {
+      // Node.js 环境全局变量（require, module, console, process 等）
+      // 避免 ESLint 报 'require' is not defined 和 'console' is not defined
+      globals: globals.node,
+
       // parserOptions — 传递给解析器的额外选项
       parserOptions: {
         // project — 指向 tsconfig.json，启用"类型感知"规则
@@ -122,6 +130,7 @@ export default [
         'error',
         { argsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/no-require-imports': 1,
     },
   },
 

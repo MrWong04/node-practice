@@ -7,7 +7,7 @@
         <el-menu-item index="/category">分类</el-menu-item>
         <el-menu-item index="/archive">归档</el-menu-item>
       </el-menu>
-      <HeaderUser name="访客" />
+      <HeaderUser :name="userStore.user?.name || '访客'" />
     </header>
 
     <main class="main-content">
@@ -20,7 +20,9 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import HeaderUser from '@/components/HeaderUser/index.vue'
+import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
 const route = useRoute()
 
 const activeIndex = computed(() => {

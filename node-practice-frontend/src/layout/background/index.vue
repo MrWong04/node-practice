@@ -9,7 +9,7 @@
         <el-menu-item index="/background/content">内容</el-menu-item>
         <el-menu-item index="/background/system">系统</el-menu-item>
       </el-menu>
-      <HeaderUser name="管理员" />
+      <HeaderUser :name="userStore.user?.name || '管理员'" />
     </header>
 
     <div class="background-body">
@@ -55,7 +55,9 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { DataLine, Document, Setting } from '@element-plus/icons-vue'
 import HeaderUser from '@/components/HeaderUser/index.vue'
+import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
 const route = useRoute()
 
 const topActiveIndex = computed(() => {
