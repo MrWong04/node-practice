@@ -12,10 +12,11 @@ datasource db {
 
 // 文章模型
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String   @db.Text
-  author    String   @default("Anonymous")
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?  @db.Text
+  content     String   @db.Text
+  author      String   @default("Anonymous")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -28,6 +28,14 @@ const prospectRoutes: RouteRecordRaw[] = [
         meta: {
           title: '归档'
         }
+      },
+      {
+        path: 'article/:id',
+        name: 'ProspectArticleDetail',
+        component: () => import('@/views/prospect/article/index.vue'),
+        meta: {
+          title: '文章详情'
+        }
       }
     ]
   }

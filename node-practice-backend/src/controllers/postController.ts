@@ -18,7 +18,16 @@ import * as postService from '../services/postService'
 export async function getAll(_req: Request, res: Response, next: NextFunction) {
   try {
     const posts = await postService.getAllPosts()
-    res.json(successResponse(posts))
+    // 把嵌套的 user.name 提取到外层，方便前端直接访问
+    const formatted = posts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      createdAt: post.createdAt,
+      authorName: post.user?.name,
+      description: post.description,
+      content: post.content,
+    }))
+    res.json(successResponse(formatted))
   } catch (err) {
     next(err)
   }
@@ -28,13 +37,22 @@ export async function getAll(_req: Request, res: Response, next: NextFunction) {
  * 获取单篇文章详情
  * 对应前端：`GET /api/posts/:id`
  * 从 req.params.id 拿到 URL 中的文章 ID（如 `/posts/5`），转成数字后传给 Service。
- * 返回 200 + { success: true, data: { id, title, content, ... } }
+ * 返回 200 + { success: true, data: { id, title, ... } }
  */
 export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const id = parseInt(req.params.id as string, 10)
     const post = await postService.getPostById(id)
-    res.json(successResponse(post))
+    // 把嵌套的 user.name 提取到外层
+    const formatted = {
+      id: post.id,
+      title: post.title,
+      createdAt: post.createdAt,
+      authorName: post.user?.name,
+      description: post.description,
+      content: post.content || '',
+    }
+    res.json(successResponse(formatted))
   } catch (err) {
     next(err)
   }
@@ -49,8 +67,14 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
  */
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    const { title, content } = req.body
-    const post = await postService.createPost(title, content, req.user!.email, req.user!.userId)
+    const { title, content, description } = req.body
+    const post = await postService.createPost(
+      title,
+      content,
+      description,
+      req.user!.email,
+      req.user!.userId
+    )
     res.status(201).json(successResponse(post))
   } catch (err) {
     next(err)
@@ -66,8 +90,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 export async function update(req: Request, res: Response, next: NextFunction) {
   try {
     const id = parseInt(req.params.id as string, 10)
-    const { title, content } = req.body
-    const post = await postService.updatePost(id, req.user!.userId, title, content)
+    const { title, content, description } = req.body
+    const post = await postService.updatePost(id, req.user!.userId, title, content, description)
     res.json(successResponse(post))
   } catch (err) {
     next(err)

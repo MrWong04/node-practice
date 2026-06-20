@@ -8,22 +8,21 @@
     <div class="article-list">
       <h2>最新文章</h2>
       <el-card
-        v-for="(article, index) in articles"
-        :key="index"
+        v-for="article in articles"
+        :key="article.id"
         class="article-card"
         shadow="hover"
+        @click="goToDetail(article.id)"
       >
         <template #header>
           <div class="article-header">
             <span class="article-title">{{ article.title }}</span>
-            <span class="article-date">{{ article.date }}</span>
+            <span class="article-date">{{ formatDate(article.createdAt) }}</span>
           </div>
         </template>
-        <div class="article-summary">{{ article.summary }}</div>
-        <div class="article-tags">
-          <el-tag v-for="tag in article.tags" :key="tag" size="small" class="tag-item">
-            {{ tag }}
-          </el-tag>
+        <div class="article-summary">{{ article.description || summaryOf(article.content) }}</div>
+        <div class="article-meta">
+          <span class="article-author">作者：{{ article.authorName }}</span>
         </div>
       </el-card>
     </div>
@@ -31,29 +30,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getAllPostsApi, type Post } from '@/api/article'
 
-const articles = ref([
-  {
-    title: 'Vue 3 组合式 API 最佳实践',
-    date: '2024-06-01',
-    summary:
-      '本文详细介绍了 Vue 3 组合式 API 的使用方法，包括 setup 函数、响应式 API、生命周期钩子等核心概念。',
-    tags: ['Vue', '前端']
-  },
-  {
-    title: 'TypeScript 高级类型体操',
-    date: '2024-05-28',
-    summary: '深入探讨 TypeScript 中的高级类型操作，包括条件类型、映射类型、模板字面量类型等。',
-    tags: ['TypeScript', '进阶']
-  },
-  {
-    title: 'Node.js 性能优化指南',
-    date: '2024-05-20',
-    summary: '从实际项目出发，分享 Node.js 应用性能优化的经验和技巧，包括内存管理、异步优化等。',
-    tags: ['Node.js', '性能']
+const router = useRouter()
+const articles = ref<Post[]>([])
+
+function formatDate(iso: string): string {
+  const d = new Date(iso)
+  return d.toLocaleDateString('zh-CN')
+}
+
+function summaryOf(content: string): string {
+  // 截取纯文本前 120 字作为摘要
+  const text = content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ')
+  return text.length > 120 ? text.slice(0, 120) + '…' : text
+}
+
+function goToDetail(id: number) {
+  router.push(`/article/${id}`)
+}
+
+onMounted(async () => {
+  try {
+    const res = await getAllPostsApi()
+    if (res.success) {
+      articles.value = res.data
+    }
+  } catch (err) {
+    console.error('获取文章列表失败', err)
   }
-])
+})
 </script>
 
 <style scoped lang="scss">
@@ -90,6 +98,12 @@ const articles = ref([
 
   .article-card {
     margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
 
     .article-header {
       display: flex;

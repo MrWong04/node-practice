@@ -18,8 +18,15 @@ import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors'
 export async function getAllPosts() {
   return prisma.post.findMany({
     orderBy: { createdAt: 'desc' },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      description: true,
+      content: true,
+      user: {
+        select: { name: true },
+      },
     },
   })
 }
@@ -34,8 +41,15 @@ export async function getAllPosts() {
 export async function getPostById(id: number) {
   const post = await prisma.post.findUnique({
     where: { id },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      description: true,
+      content: true,
+      user: {
+        select: { name: true },
+      },
     },
   })
   if (!post) {
@@ -56,7 +70,13 @@ export async function getPostById(id: number) {
  * 注意：`user: { connect: { id: userId } }` 是 Prisma 的"关联写法"——
  * 意思是"把这篇文章关联到 id = userId 的那个用户"，类似外键操作。
  */
-export async function createPost(title: string, content: string, author: string, userId: number) {
+export async function createPost(
+  title: string,
+  content: string,
+  description: string | undefined,
+  author: string,
+  userId: number
+) {
   if (!title || !content) {
     throw new ValidationError('标题和内容为必填项')
   }
@@ -65,6 +85,7 @@ export async function createPost(title: string, content: string, author: string,
     data: {
       title,
       content,
+      description,
       author,
       user: { connect: { id: userId } },
     },
@@ -85,7 +106,13 @@ export async function createPost(title: string, content: string, author: string,
  * 返回：更新后的文章对象
  * 如果无权限：抛出 `ForbiddenError`，前端会收到 403 状态码
  */
-export async function updatePost(id: number, userId: number, title?: string, content?: string) {
+export async function updatePost(
+  id: number,
+  userId: number,
+  title?: string,
+  content?: string,
+  description?: string
+) {
   const existing = await prisma.post.findUnique({
     where: { id },
     select: { id: true, authorId: true },
@@ -103,6 +130,7 @@ export async function updatePost(id: number, userId: number, title?: string, con
     data: {
       ...(title !== undefined && { title }),
       ...(content !== undefined && { content }),
+      ...(description !== undefined && { description }),
     },
     include: {
       user: { select: { id: true, name: true, email: true } },

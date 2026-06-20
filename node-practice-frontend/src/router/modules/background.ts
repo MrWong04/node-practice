@@ -30,6 +30,22 @@ const backgroundRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'content/articles/create',
+        name: 'BackgroundArticleCreate',
+        component: () => import('@/views/background/articles/edit.vue'),
+        meta: {
+          title: '新增文章'
+        }
+      },
+      {
+        path: 'content/articles/edit/:id',
+        name: 'BackgroundArticleEdit',
+        component: () => import('@/views/background/articles/edit.vue'),
+        meta: {
+          title: '编辑文章'
+        }
+      },
+      {
         path: 'content/categories',
         name: 'BackgroundCategories',
         component: () => import('@/views/background/categories/index.vue'),
