@@ -36,14 +36,14 @@
           <el-input
             v-model="form.content"
             type="textarea"
-            :rows="20"
+            :autosize="{ minRows: 20, maxRows: 9999 }"
             placeholder="请输入 Markdown 格式文章内容"
             resize="none"
           />
         </div>
         <div class="preview-pane">
           <div class="pane-label">预览</div>
-          <div class="markdown-preview" v-html="renderedHtml"></div>
+          <div class="markdown-body" v-html="renderedHtml"></div>
         </div>
       </div>
     </el-card>
@@ -55,7 +55,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { marked } from 'marked'
+import { marked, addTargetBlank } from '@/utils/marked'
 import { getPostByIdApi, createPostApi, updatePostApi, type Post } from '@/api/article'
 
 const route = useRoute()
@@ -74,9 +74,10 @@ const form = reactive({
 })
 
 const renderedHtml = computed(() => {
-  return form.content
+  const html = form.content
     ? marked.parse(form.content, { async: false })
     : '<p style="color:#999">暂无内容</p>'
+  return addTargetBlank(html)
 })
 
 const rules = {
@@ -97,7 +98,8 @@ async function submitForm() {
     if (isEdit.value && articleId.value) {
       const res = await updatePostApi(articleId.value, {
         title: form.title,
-        content: form.content
+        content: form.content,
+        description: form.description
       })
       if (res.success) {
         ElMessage.success('更新成功')
@@ -106,7 +108,8 @@ async function submitForm() {
     } else {
       const res = await createPostApi({
         title: form.title,
-        content: form.content
+        content: form.content,
+        description: form.description
       })
       if (res.success) {
         ElMessage.success('创建成功')
@@ -138,8 +141,6 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/styles/markdown.scss';
-
 .article-edit-view {
   .edit-header {
     display: flex;
@@ -197,7 +198,7 @@ onMounted(async () => {
       border-left: 1px solid #dcdfe6;
       background: #fafafa;
 
-      .markdown-preview {
+      .markdown-body {
         flex: 1;
         padding: 16px;
         overflow-y: auto;

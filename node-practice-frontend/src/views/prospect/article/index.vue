@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { marked } from 'marked'
+import { marked, addTargetBlank } from '@/utils/marked'
 import { getPostByIdApi, type Post } from '@/api/article'
 
 const route = useRoute()
@@ -34,7 +34,8 @@ const article = ref<Post>({
 })
 
 const renderedContent = computed(() => {
-  return article.value.content ? marked.parse(article.value.content, { async: false }) : ''
+  const html = article.value.content ? marked.parse(article.value.content, { async: false }) : ''
+  return addTargetBlank(html)
 })
 
 function formatDate(iso: string): string {
@@ -67,9 +68,8 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/styles/markdown.scss' as *;
-
 .article-detail-view {
+  background-color: var(--bg-color);
   max-width: 800px;
   margin: 0 auto;
   padding: 40px 20px;

@@ -20,7 +20,7 @@
             <span class="article-date">{{ formatDate(article.createdAt) }}</span>
           </div>
         </template>
-        <div class="article-summary">{{ article.description || summaryOf(article.content) }}</div>
+        <div class="article-summary">{{ article.description }}</div>
         <div class="article-meta">
           <span class="article-author">作者：{{ article.authorName }}</span>
         </div>

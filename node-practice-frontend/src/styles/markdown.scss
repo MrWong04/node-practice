@@ -17,16 +17,21 @@
   p {
     margin: 12px 0;
   }
-  ul,
+  ul {
+    padding-left: 24px;
+    margin: 12px 0;
+    list-style-type: disc;
+  }
   ol {
     padding-left: 24px;
     margin: 12px 0;
+    list-style-type: decimal;
   }
   li {
     margin: 6px 0;
   }
   pre {
-    background: #f5f7fa;
+    background: #f6f8fa;
     padding: 16px;
     border-radius: 6px;
     overflow-x: auto;
