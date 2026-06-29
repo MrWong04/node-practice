@@ -24,6 +24,13 @@ model Post {
   authorId  Int?     @map("author_id")
   user      User?    @relation(fields: [authorId], references: [id])
 
+  // 关联：一篇文章属于一个分类
+  categoryId Int?    @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  // 关联：一篇文章有多个标签（多对多）
+  tags       PostTag[]
+
   @@map("posts")
 }
 
@@ -40,4 +47,47 @@ model User {
   posts     Post[]
 
   @@map("users")
+}
+
+// 分类模型
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联：一个分类有多篇文章
+  posts     Post[]
+
+  @@map("categories")
+}
+
+// 标签模型
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联：一个标签有多篇文章（通过 PostTag）
+  postTags  PostTag[]
+
+  @@map("tags")
+}
+
+// 文章-标签关联表（多对多关系）
+model PostTag {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  tagId     Int      @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 关联
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, tagId])
+  @@map("post_tags")
 }

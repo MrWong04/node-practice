@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from 'express'
 import { PORT } from './config'
 import authRoutes from './routes/auth'
 import postRoutes from './routes/posts'
+import categoryRoutes from './routes/categories'
+import tagRoutes from './routes/tags'
 import { errorHandler } from './middleware/errorHandler'
 
 const app = express()
@@ -20,6 +22,8 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 // ============================================
 app.use('/api/auth', authRoutes)
 app.use('/api/posts', postRoutes)
+app.use('/api/categories', categoryRoutes)
+app.use('/api/tags', tagRoutes)
 
 // ============================================
 // 全局错误处理
@@ -35,10 +39,24 @@ app.listen(PORT, () => {
   console.log(`  POST   http://localhost:${PORT}/api/auth/login`)
   console.log(`  GET    http://localhost:${PORT}/api/posts`)
   console.log(`  GET    http://localhost:${PORT}/api/posts/:id`)
+  console.log(`  GET    http://localhost:${PORT}/api/categories`)
+  console.log(`  GET    http://localhost:${PORT}/api/categories/:id`)
+  console.log(`  GET    http://localhost:${PORT}/api/categories/slug/:slug`)
+  console.log(`  GET    http://localhost:${PORT}/api/tags`)
+  console.log(`  GET    http://localhost:${PORT}/api/tags/:id`)
+  console.log(`  GET    http://localhost:${PORT}/api/tags/slug/:slug`)
   console.log('')
   console.log('Protected endpoints (need Authorization header):')
   console.log(`  GET    http://localhost:${PORT}/api/auth/me`)
   console.log(`  POST   http://localhost:${PORT}/api/posts`)
   console.log(`  PUT    http://localhost:${PORT}/api/posts/:id`)
   console.log(`  DELETE http://localhost:${PORT}/api/posts/:id`)
+  console.log(`  POST   http://localhost:${PORT}/api/categories`)
+  console.log(`  PUT    http://localhost:${PORT}/api/categories/:id`)
+  console.log(`  DELETE http://localhost:${PORT}/api/categories/:id`)
+  console.log(`  POST   http://localhost:${PORT}/api/tags`)
+  console.log(`  PUT    http://localhost:${PORT}/api/tags/:id`)
+  console.log(`  DELETE http://localhost:${PORT}/api/tags/:id`)
+  console.log(`  POST   http://localhost:${PORT}/api/posts/:postId/tags`)
+  console.log(`  DELETE http://localhost:${PORT}/api/posts/:postId/tags/:tagId`)
 })

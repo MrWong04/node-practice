@@ -5,18 +5,21 @@
       <p>按主题浏览所有文章</p>
     </div>
 
-    <div class="category-list">
+    <div class="category-list" v-loading="loading">
+      <el-empty v-if="!loading && categories.length === 0" description="暂无分类" />
+
       <el-card
-        v-for="(category, index) in categories"
-        :key="index"
+        v-for="category in categories"
+        :key="category.id"
         class="category-card"
         shadow="hover"
+        @click="goToCategory(category.id)"
       >
         <div class="category-info">
           <el-icon class="category-icon"><Folder /></el-icon>
           <div class="category-detail">
             <h3>{{ category.name }}</h3>
-            <span class="category-count">{{ category.count }} 篇文章</span>
+            <span class="category-count">{{ category._count?.posts ?? 0 }} 篇文章</span>
           </div>
         </div>
       </el-card>
@@ -25,16 +28,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Folder } from '@element-plus/icons-vue'
+import { getAllCategoriesApi, type Category } from '@/api/category'
 
-const categories = ref([
-  { name: '前端开发', count: 12 },
-  { name: '后端开发', count: 8 },
-  { name: '数据库', count: 5 },
-  { name: ' DevOps', count: 3 },
-  { name: '随笔', count: 6 }
-])
+const router = useRouter()
+const categories = ref<Category[]>([])
+const loading = ref(false)
+
+function goToCategory(id: number) {
+  router.push(`/category/${id}`)
+}
+
+async function fetchCategories() {
+  loading.value = true
+  try {
+    const res = await getAllCategoriesApi({ pageSize: 100 })
+    if (res.success) {
+      categories.value = res.data.items
+    }
+  } catch {
+    categories.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchCategories()
+})
 </script>
 
 <style scoped lang="scss">
@@ -63,10 +86,16 @@ const categories = ref([
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 16px;
+    min-height: 120px;
   }
 
   .category-card {
     cursor: pointer;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
 
     .category-info {
       display: flex;

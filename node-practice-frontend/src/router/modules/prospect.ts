@@ -22,6 +22,14 @@ const prospectRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: 'category/:id',
+        name: 'ProspectCategoryDetail',
+        component: () => import('@/views/prospect/category/detail.vue'),
+        meta: {
+          title: '分类详情'
+        }
+      },
+      {
         path: 'archive',
         name: 'ProspectArchive',
         component: () => import('@/views/prospect/archive/index.vue'),

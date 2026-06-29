@@ -28,6 +28,26 @@
             placeholder="请输入文章摘要（前台列表展示用）"
           />
         </el-form-item>
+        <el-form-item label="分类" prop="categoryId">
+          <el-select
+            v-model="form.categoryId"
+            placeholder="请选择分类"
+            clearable
+            style="width: 240px"
+          >
+            <el-option
+              v-for="item in categories"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签" prop="tagIds">
+          <el-select v-model="form.tagIds" multiple placeholder="请选择标签" style="width: 360px">
+            <el-option v-for="item in tags" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
       </el-form>
 
       <div class="editor-container">
@@ -57,6 +77,8 @@ import { ElMessage } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { marked, addTargetBlank } from '@/utils/marked'
 import { getPostByIdApi, createPostApi, updatePostApi, type Post } from '@/api/article'
+import { getAllCategoriesApi, type Category } from '@/api/category'
+import { getAllTagsApi, type Tag } from '@/api/tag'
 
 const route = useRoute()
 const router = useRouter()
@@ -67,10 +89,15 @@ const articleId = computed(() => Number(route.params.id))
 const submitting = ref(false)
 const formRef = ref()
 
+const categories = ref<Category[]>([])
+const tags = ref<Tag[]>([])
+
 const form = reactive({
   title: '',
   description: '',
-  content: ''
+  content: '',
+  categoryId: null as number | null,
+  tagIds: [] as number[]
 })
 
 const renderedHtml = computed(() => {
@@ -89,48 +116,75 @@ function goBack() {
   router.push('/background/content/articles')
 }
 
+async function fetchCategories() {
+  try {
+    const res = await getAllCategoriesApi({ pageSize: 100 })
+    if (res.success) {
+      categories.value = res.data.items
+    }
+  } catch (err) {
+    console.error('获取分类列表失败', err)
+  }
+}
+
+async function fetchTags() {
+  try {
+    const res = await getAllTagsApi({ pageSize: 100 })
+    if (res.success) {
+      tags.value = res.data.items
+    }
+  } catch (err) {
+    console.error('获取标签列表失败', err)
+  }
+}
+
 async function submitForm() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
   submitting.value = true
   try {
+    const params = {
+      title: form.title,
+      content: form.content,
+      description: form.description || undefined,
+      categoryId: form.categoryId,
+      tagIds: form.tagIds.length > 0 ? form.tagIds : undefined
+    }
+
     if (isEdit.value && articleId.value) {
-      const res = await updatePostApi(articleId.value, {
-        title: form.title,
-        content: form.content,
-        description: form.description
-      })
+      const res = await updatePostApi(articleId.value, params)
       if (res.success) {
         ElMessage.success('更新成功')
         goBack()
       }
     } else {
-      const res = await createPostApi({
-        title: form.title,
-        content: form.content,
-        description: form.description
-      })
+      const res = await createPostApi(params)
       if (res.success) {
         ElMessage.success('创建成功')
         goBack()
       }
     }
-  } catch (err) {
-    ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.message || (isEdit.value ? '更新失败' : '创建失败'))
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(async () => {
+  await Promise.all([fetchCategories(), fetchTags()])
+
   if (isEdit.value && articleId.value) {
     try {
       const res = await getPostByIdApi(articleId.value)
       if (res.success) {
-        form.title = res.data.title
-        form.description = res.data.description || ''
-        form.content = res.data.content
+        const data = res.data
+        form.title = data.title
+        form.description = data.description || ''
+        form.content = data.content
+        form.categoryId = data.category?.id || null
+        form.tagIds = data.tags?.map((t) => t.id) || []
       }
     } catch (err) {
       ElMessage.error('获取文章详情失败')

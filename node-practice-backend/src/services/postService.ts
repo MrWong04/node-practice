@@ -1,5 +1,90 @@
+import type { Prisma } from '@prisma/client'
 import { prisma } from '../../prisma/client'
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors'
+import { buildPaginatedResult, type PaginatedResult, type PaginationParams } from '../utils/query'
+
+export interface PostListQuery {
+  keyword?: string
+  categoryId?: number
+  tagId?: number
+}
+
+const postSelect = {
+  id: true,
+  title: true,
+  description: true,
+  content: true,
+  author: true,
+  createdAt: true,
+  updatedAt: true,
+  authorId: true,
+  user: {
+    select: { id: true, name: true, email: true },
+  },
+  category: {
+    select: { id: true, name: true, slug: true },
+  },
+  tags: {
+    select: {
+      tag: {
+        select: { id: true, name: true, slug: true },
+      },
+    },
+  },
+} satisfies Prisma.PostSelect
+
+type PostRecord = Prisma.PostGetPayload<{ select: typeof postSelect }>
+
+export type FormattedPost = {
+  id: number
+  title: string
+  description?: string
+  content: string
+  author: string
+  createdAt: Date
+  updatedAt: Date
+  authorId: number | null
+  authorName: string
+  user: { id: number; name: string | null; email: string } | null
+  category: { id: number; name: string; slug: string } | null
+  tags: { id: number; name: string; slug: string }[]
+}
+
+function formatPost(post: PostRecord): FormattedPost {
+  return {
+    id: post.id,
+    title: post.title,
+    description: post.description ?? undefined,
+    content: post.content,
+    author: post.author,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    authorId: post.authorId,
+    authorName: post.user?.name ?? post.author,
+    user: post.user,
+    category: post.category,
+    tags: post.tags.map((pt) => pt.tag),
+  }
+}
+
+function buildPostWhere(query: PostListQuery): Prisma.PostWhereInput {
+  const where: Prisma.PostWhereInput = {}
+
+  if (query.keyword) {
+    where.OR = [
+      { title: { contains: query.keyword } },
+      { description: { contains: query.keyword } },
+    ]
+  }
+  if (query.categoryId !== undefined) {
+    where.categoryId = query.categoryId
+  }
+  if (query.tagId !== undefined) {
+    where.tags = { some: { tagId: query.tagId } }
+  }
+
+  return where
+}
 
 // ==========================================================================
 // 文章 Service（业务逻辑层）
@@ -9,26 +94,29 @@ import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors'
 // ==========================================================================
 
 /**
- * 获取所有文章列表
+ * 获取文章列表（支持筛选与分页）
  * 对应前端接口：`GET /api/posts`
- * 做的事情：按发布时间倒序排列，同时把每篇文章的"作者信息"一起查出来（关联查询）。
- * 返回：文章数组，每个元素包含 { id, title, content, author, createdAt, user: { id, name, email } }
- * 类比：类似前端调用 `axios.get('/posts')` 后拿到列表数据。
+ * 可选查询参数：keyword（标题/描述模糊搜索）、categoryId、tagId
+ * 分页参数：page（默认 1）、pageSize（默认 10，最大 100）
  */
-export async function getAllPosts() {
-  return prisma.post.findMany({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      description: true,
-      content: true,
-      user: {
-        select: { name: true },
-      },
-    },
-  })
+export async function getAllPosts(
+  query: PostListQuery = {},
+  pagination: PaginationParams
+): Promise<PaginatedResult<FormattedPost>> {
+  const where = buildPostWhere(query)
+
+  const [records, total] = await Promise.all([
+    prisma.post.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: pagination.skip,
+      take: pagination.take,
+      select: postSelect,
+    }),
+    prisma.post.count({ where }),
+  ])
+
+  return buildPaginatedResult(records.map(formatPost), total, pagination)
 }
 
 /**
@@ -38,24 +126,15 @@ export async function getAllPosts() {
  * 返回：单篇文章对象，包含作者信息
  * 如果找不到：抛出 `NotFoundError`，前端会收到 404 状态码
  */
-export async function getPostById(id: number) {
+export async function getPostById(id: number): Promise<FormattedPost> {
   const post = await prisma.post.findUnique({
     where: { id },
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      description: true,
-      content: true,
-      user: {
-        select: { name: true },
-      },
-    },
+    select: postSelect,
   })
   if (!post) {
     throw new NotFoundError('文章不存在')
   }
-  return post
+  return formatPost(post)
 }
 
 /**
@@ -75,24 +154,33 @@ export async function createPost(
   content: string,
   description: string | undefined,
   author: string,
-  userId: number
-) {
+  userId: number,
+  categoryId?: number,
+  tagIds?: number[]
+): Promise<FormattedPost> {
   if (!title || !content) {
     throw new ValidationError('标题和内容为必填项')
   }
-
-  return prisma.post.create({
+  const post = await prisma.post.create({
     data: {
       title,
       content,
       description,
       author,
       user: { connect: { id: userId } },
+      ...(categoryId !== undefined && { category: { connect: { id: categoryId } } }),
+      ...(tagIds &&
+        tagIds.length > 0 && {
+          tags: {
+            create: tagIds.map((tagId) => ({
+              tag: { connect: { id: tagId } },
+            })),
+          },
+        }),
     },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-    },
+    select: postSelect,
   })
+  return formatPost(post)
 }
 
 /**
@@ -111,8 +199,10 @@ export async function updatePost(
   userId: number,
   title?: string,
   content?: string,
-  description?: string
-) {
+  description?: string,
+  categoryId?: number,
+  tagIds?: number[]
+): Promise<FormattedPost> {
   const existing = await prisma.post.findUnique({
     where: { id },
     select: { id: true, authorId: true },
@@ -125,17 +215,39 @@ export async function updatePost(
     throw new ForbiddenError('只能更新自己的文章')
   }
 
-  return prisma.post.update({
-    where: { id },
-    data: {
-      ...(title !== undefined && { title }),
-      ...(content !== undefined && { content }),
-      ...(description !== undefined && { description }),
-    },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-    },
-  })
+  // 使用 as Record 避免 any 类型错误
+  const data: Record<string, unknown> = {
+    ...(title !== undefined && { title }),
+    ...(content !== undefined && { content }),
+    ...(description !== undefined && { description }),
+  }
+
+  if (categoryId !== undefined) {
+    if (categoryId === null) {
+      data.category = { disconnect: true }
+    } else {
+      data.category = { connect: { id: categoryId } }
+    }
+  }
+
+  if (tagIds) {
+    await prisma.postTag.deleteMany({ where: { postId: id } })
+    if (tagIds.length > 0) {
+      data.tags = {
+        create: tagIds.map((tagId) => ({
+          tag: { connect: { id: tagId } },
+        })),
+      }
+    }
+  }
+
+  return formatPost(
+    await prisma.post.update({
+      where: { id },
+      data: data as Parameters<typeof prisma.post.update>[0]['data'],
+      select: postSelect,
+    })
+  )
 }
 
 /**
@@ -148,7 +260,7 @@ export async function updatePost(
  * 参数：id（文章 ID）、userId（当前登录用户 ID）
  * 返回：被删除的文章对象（前端可以展示"已删除"的提示）
  */
-export async function deletePost(id: number, userId: number) {
+export async function deletePost(id: number, userId: number): Promise<FormattedPost> {
   const existing = await prisma.post.findUnique({
     where: { id },
     select: { id: true, authorId: true },
@@ -161,5 +273,9 @@ export async function deletePost(id: number, userId: number) {
     throw new ForbiddenError('只能删除自己的文章')
   }
 
-  return prisma.post.delete({ where: { id } })
+  const post = await prisma.post.delete({
+    where: { id },
+    select: postSelect,
+  })
+  return formatPost(post)
 }

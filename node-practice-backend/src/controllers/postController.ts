@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { successResponse } from '../utils/response'
+import { parseOptionalInt, parseOptionalString, parsePagination } from '../utils/query'
 import * as postService from '../services/postService'
 
 // ==========================================================================
@@ -10,24 +11,24 @@ import * as postService from '../services/postService'
 // ==========================================================================
 
 /**
- * 获取所有文章列表
+ * 获取文章列表（支持筛选与分页）
  * 对应前端：`GET /api/posts`
- * 不需要登录，所以 req 参数前面加了下划线（表示"虽然传了，但这里不用"）。
- * 返回 200 + { success: true, data: [文章1, 文章2, ...] }
+ * 可选查询参数：keyword、categoryId、tagId
+ * 分页参数：page、pageSize
+ * 返回 200 + { success: true, data: { items, pagination } }
  */
-export async function getAll(_req: Request, res: Response, next: NextFunction) {
+export async function getAll(req: Request, res: Response, next: NextFunction) {
   try {
-    const posts = await postService.getAllPosts()
-    // 把嵌套的 user.name 提取到外层，方便前端直接访问
-    const formatted = posts.map((post) => ({
-      id: post.id,
-      title: post.title,
-      createdAt: post.createdAt,
-      authorName: post.user?.name,
-      description: post.description,
-      content: post.content,
-    }))
-    res.json(successResponse(formatted))
+    const pagination = parsePagination(req.query as Record<string, unknown>)
+    const result = await postService.getAllPosts(
+      {
+        keyword: parseOptionalString(req.query.keyword),
+        categoryId: parseOptionalInt(req.query.categoryId, 'categoryId'),
+        tagId: parseOptionalInt(req.query.tagId, 'tagId'),
+      },
+      pagination
+    )
+    res.json(successResponse(result))
   } catch (err) {
     next(err)
   }
@@ -43,16 +44,7 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
     const id = parseInt(req.params.id as string, 10)
     const post = await postService.getPostById(id)
-    // 把嵌套的 user.name 提取到外层
-    const formatted = {
-      id: post.id,
-      title: post.title,
-      createdAt: post.createdAt,
-      authorName: post.user?.name,
-      description: post.description,
-      content: post.content || '',
-    }
-    res.json(successResponse(formatted))
+    res.json(successResponse(post))
   } catch (err) {
     next(err)
   }
@@ -67,13 +59,15 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
  */
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    const { title, content, description } = req.body
+    const { title, content, description, categoryId, tagIds } = req.body
     const post = await postService.createPost(
       title,
       content,
       description,
       req.user!.email,
-      req.user!.userId
+      req.user!.userId,
+      categoryId,
+      tagIds
     )
     res.status(201).json(successResponse(post))
   } catch (err) {
@@ -90,8 +84,16 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 export async function update(req: Request, res: Response, next: NextFunction) {
   try {
     const id = parseInt(req.params.id as string, 10)
-    const { title, content, description } = req.body
-    const post = await postService.updatePost(id, req.user!.userId, title, content, description)
+    const { title, content, description, categoryId, tagIds } = req.body
+    const post = await postService.updatePost(
+      id,
+      req.user!.userId,
+      title,
+      content,
+      description,
+      categoryId,
+      tagIds
+    )
     res.json(successResponse(post))
   } catch (err) {
     next(err)

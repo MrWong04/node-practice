@@ -26,7 +26,7 @@ const userStore = useUserStore()
 const route = useRoute()
 
 const activeIndex = computed(() => {
-  if (route.path === '/category') return '/category'
+  if (route.path.startsWith('/category')) return '/category'
   if (route.path === '/archive') return '/archive'
   return '/'
 })

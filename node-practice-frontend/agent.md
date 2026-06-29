@@ -51,7 +51,9 @@ node-practice-frontend/
 │   ├── App.vue                 # 根组件（仅挂载 <router-view>）
 │   ├── api/
 │   │   ├── auth.ts             # 认证相关 API（登录/注册/获取用户信息）
-│   │   ├── article.ts          # 文章相关 API（当前为空）
+│   │   ├── article.ts          # 文章相关 API（列表、详情、创建、更新、删除），支持分类和标签
+│   │   ├── category.ts         # 分类模块 API（列表、详情、创建、更新、删除）
+│   │   ├── tag.ts              # 标签模块 API（列表、详情、创建、更新、删除）
 │   │   └── user-center.ts      # 用户中心 API
 │   ├── assets/
 │   │   └── images/             # 静态图片资源
@@ -88,7 +90,7 @@ node-practice-frontend/
 │   │   └── user.ts
 │   ├── utils/
 │   │   ├── common.ts           # 通用工具函数
-│   │   └── service.ts          # Axios 封装（请求/响应拦截器）
+│   │   └── service.ts          # Axios 封装（blogService + service 双实例）
 │   ├── views/                  # 页面视图组件
 │   │   ├── auth/login/         # 登录/注册页
 │   │   ├── background/         # 后台管理页面
@@ -152,6 +154,20 @@ node-practice-frontend/
 | ------ | ---------------- | -------------------- | ---------------- |
 | `user` | `stores/user.ts` | `user`, `isLoggedIn` | 当前登录用户信息 |
 
+### 新增 API 文件
+
+| 文件              | 说明                                                       |
+| ----------------- | ---------------------------------------------------------- |
+| `api/category.ts` | 分类模块 API（列表、详情、创建、更新、删除）               |
+| `api/tag.ts`      | 标签模块 API（列表、详情、创建、更新、删除、文章标签关联） |
+
+### 后台管理页面功能
+
+| 页面                                    | 路由                             | 功能                       |
+| --------------------------------------- | -------------------------------- | -------------------------- |
+| `views/background/categories/index.vue` | `/background/content/categories` | 分类列表、新增、编辑、删除 |
+| `views/background/tags/index.vue`       | `/background/content/tags`       | 标签列表、新增、编辑、删除 |
+
 ### User Store 结构
 
 ```typescript
@@ -177,10 +193,10 @@ const clearUser = () => {
 
 ### 双 Axios 实例设计
 
-| 实例              | 文件                   | baseURL      | 用途                                   |
-| ----------------- | ---------------------- | ------------ | -------------------------------------- |
-| `request`（博客） | `src/api/auth.ts`      | `/local/api` | 对接 node-practice-backend（JWT 认证） |
-| `service`（业务） | `src/utils/service.ts` | `/yk`        | 对接原有业务后端（access-token 认证）  |
+| 实例                  | 文件                   | baseURL      | 用途                                   |
+| --------------------- | ---------------------- | ------------ | -------------------------------------- |
+| `blogService`（博客） | `src/utils/service.ts` | `/local/api` | 对接 node-practice-backend（JWT 认证） |
+| `service`（业务）     | `src/utils/service.ts` | `/yk`        | 对接原有业务后端（access-token 认证）  |
 
 ### 博客认证 API（auth.ts）
 
@@ -190,8 +206,9 @@ loginApi(params: LoginParams)        => POST /auth/login
 getMeApi()                           => GET  /auth/me
 ```
 
-- 请求拦截器：自动注入 `Authorization: Bearer <token>`（从 localStorage 读取 `blog_token`）
-- 响应拦截器：直接返回 `response.data`
+- `blogService` 请求拦截器：自动注入 `Authorization: Bearer <token>`（从 localStorage 读取 `blog_token`）
+- `blogService` 响应拦截器：直接返回 `response.data`
+- API 文件（auth.ts / article.ts / category.ts / tag.ts）统一从 `src/utils/service.ts` 导入 `blogService`
 
 ### 业务 API（service.ts）
 
@@ -303,16 +320,17 @@ npm run format           # Prettier 格式化 src/
 - 管理系统风格，使用 Element Plus 组件
 - 侧边栏导航 + 顶部面包屑/用户信息
 - 路由：`/background/dashboard`, `/background/content/articles`, `/background/system/users` 等
-- 当前页面多为占位页面，功能待完善
+- 分类管理、标签管理页面已完善（列表、新增、编辑、删除）
+- 文章管理页面已完善（列表、新增、编辑、删除），支持分类和标签选择
+- 其他页面（用户管理、角色权限、访问分析等）仍为占位页面
 
 ---
 
 ## 12. 已知问题与待办
 
-1. **文章 API 为空**：`src/api/article.ts` 当前为空文件，需要对接后端文章接口
-2. **后台页面多为占位**：`views/background/*` 下大部分页面为简单占位，功能待实现
-3. **用户 Store 未持久化**：刷新页面后需依赖路由守卫重新获取用户信息
-4. **双 Axios 实例并存**：`service.ts` 中的旧业务逻辑与 `auth.ts` 中的博客逻辑并存，需梳理统一
+1. **后台页面部分完善**：分类管理、标签管理、文章列表/编辑页面已实现，但用户管理、角色权限等页面仍为占位
+2. **用户 Store 未持久化**：刷新页面后需依赖路由守卫重新获取用户信息
+3. **Axios 实例已统一**：`src/utils/service.ts` 中已导出 `blogService`（博客后端，JWT 认证）和 `service`（业务后端，access-token 认证），博客相关 API 统一引用 `blogService`
 
 ---
 
@@ -327,5 +345,16 @@ npm run format           # Prettier 格式化 src/
 - 已实现前台/后台双布局、路由模块化、Pinia 状态管理
 - 认证系统已对接后端 JWT（登录/注册/获取用户信息）
 - 后台管理页面框架已搭建（Element Plus），具体功能待完善
+
+### 2026-06-22
+
+- 完善分类管理页面：实现分类列表展示、新增、编辑、删除功能，对接 `/api/categories` 接口
+- 完善标签管理页面：实现标签列表展示、新增、编辑、删除功能，对接 `/api/tags` 接口
+- 新增 `api/category.ts`：封装分类相关 API（getAllCategoriesApi, createCategoryApi, updateCategoryApi, deleteCategoryApi 等）
+- 新增 `api/tag.ts`：封装标签相关 API（getAllTagsApi, createTagApi, updateTagApi, deleteTagApi 等）
+- 更新文章列表页面：完善文章列表展示和删除功能，增加分类和标签列展示
+- 更新文章编辑页面：新增分类下拉选择和标签多选功能，支持创建/编辑时关联分类和标签
+- 更新 `api/article.ts`：增加 `PostCategory`、`PostTag` 类型，`Post` 增加 `category` 和 `tags` 字段，`CreatePostParams`/`UpdatePostParams` 增加 `categoryId` 和 `tagIds` 参数
+- 统一博客后端 API：新增 `blogService`（`baseURL: '/local/api'`，JWT 认证），`auth.ts` / `article.ts` / `category.ts` / `tag.ts` 统一从 `src/utils/service.ts` 导入 `blogService`，不再各自创建 axios 实例
 
 ---

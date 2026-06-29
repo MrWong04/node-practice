@@ -27,6 +27,7 @@
 | ORM      | Prisma 6.19.3 (@prisma/client)          |
 | 数据库   | MySQL 8.0（通过 Docker Compose）        |
 | 认证     | jsonwebtoken 9.x + bcrypt 6.x           |
+| 工具库   | pinyin-pro 3.x（中文转拼音，slug 生成） |
 | 构建工具 | tsc + tsx（开发热重载）                 |
 | 代码规范 | ESLint 9.x (Flat Config) + Prettier 3.x |
 | 部署     | Docker + Docker Compose（多阶段构建）   |
@@ -38,7 +39,7 @@
 ```
 node-practice-backend/
 ├── prisma/
-│   ├── schema.prisma          # 数据库模型定义（User + Post）
+│   ├── schema.prisma          # 数据库模型定义（User + Post + Category + Tag）
 │   ├── client.ts              # PrismaClient 单例封装
 │   └── migrations/            # 数据库迁移文件
 ├── src/
@@ -46,22 +47,30 @@ node-practice-backend/
 │   ├── config/
 │   │   └── index.ts           # 环境变量集中读取（PORT, SALT_ROUNDS, JWT_SECRET）
 │   ├── controllers/
-│   │   ├── authController.ts  # 认证接口：register, login, me
-│   │   └── postController.ts  # 文章接口：getAll, getById, create, update, remove
+│   │   ├── authController.ts      # 认证接口：register, login, me
+│   │   ├── categoryController.ts # 分类接口：getAll, getById, getBySlug, create, update, remove
+│   │   ├── postController.ts      # 文章接口：getAll, getById, create, update, remove
+│   │   └── tagController.ts       # 标签接口：getAll, getById, getBySlug, create, update, remove, addTagsToPost, removeTagFromPost
 │   ├── middleware/
 │   │   ├── auth.ts            # JWT 认证中间件 + Token 生成工具
 │   │   └── errorHandler.ts    # 全局错误处理中间件
 │   ├── routes/
 │   │   ├── auth.ts            # /api/auth/* 路由定义
-│   │   └── posts.ts           # /api/posts/* 路由定义
+│   │   ├── categories.ts      # /api/categories/* 路由定义
+│   │   ├── posts.ts           # /api/posts/* 路由定义
+│   │   └── tags.ts            # /api/tags/* 路由定义
 │   ├── services/
-│   │   ├── authService.ts     # 认证业务逻辑：注册、登录、查用户
-│   │   └── postService.ts     # 文章业务逻辑：CRUD + 权限校验
+│   │   ├── authService.ts      # 认证业务逻辑：注册、登录、查用户
+│   │   ├── categoryService.ts  # 分类业务逻辑：CRUD + slug 拼音生成 + 列表筛选分页
+│   │   ├── postService.ts      # 文章业务逻辑：CRUD + 权限校验 + 列表筛选分页
+│   │   └── tagService.ts       # 标签业务逻辑：CRUD + slug 拼音生成 + 文章标签关联 + 列表筛选分页
 │   ├── types/
 │   │   └── express.d.ts      # Express Request 扩展类型（req.user）
 │   └── utils/
 │       ├── errors.ts          # 自定义错误类（AppError 及子类）
-│       └── response.ts        # 统一响应格式封装
+│       ├── query.ts           # 分页与查询参数解析（parsePagination 等）
+│       ├── response.ts        # 统一响应格式封装
+│       └── slug.ts            # slug 生成（name 转拼音，pinyin-pro）
 ├── tests/
 │   ├── api-auth.test.js       # 认证接口测试
 │   ├── api-prisma.test.js     # 文章接口测试
@@ -111,12 +120,42 @@ node-practice-backend/
 
 - `id`: Int @id @default(autoincrement())
 - `title`: String
+- `description`: String? @db.Text
 - `content`: String @db.Text
 - `author`: String @default("Anonymous")
 - `createdAt`: DateTime
 - `updatedAt`: DateTime
 - `authorId`: Int? @map("author_id")
 - **关联**：`user User?` @relation（多对一）
+- **关联**：`category Category?` @relation（多对一）
+- **关联**：`tags PostTag[]`（多对多）
+
+### Category 表
+
+- `id`: Int @id @default(autoincrement())
+- `name`: String @unique
+- `slug`: String @unique
+- `createdAt`: DateTime
+- `updatedAt`: DateTime
+- **关联**：`posts Post[]`（一个分类多篇文章）
+
+### Tag 表
+
+- `id`: Int @id @default(autoincrement())
+- `name`: String @unique
+- `slug`: String @unique
+- `createdAt`: DateTime
+- `updatedAt`: DateTime
+- **关联**：`postTags PostTag[]`（多对多）
+
+### PostTag 表（文章-标签关联）
+
+- `id`: Int @id @default(autoincrement())
+- `postId`: Int @map("post_id")
+- `tagId`: Int @map("tag_id")
+- `createdAt`: DateTime
+- **关联**：`post Post` @relation（onDelete: Cascade）
+- **关联**：`tag Tag` @relation（onDelete: Cascade）
 
 ---
 
@@ -124,23 +163,39 @@ node-practice-backend/
 
 ### 公开接口（无需认证）
 
-| 方法 | 路径                 | 说明             |
-| ---- | -------------------- | ---------------- |
-| POST | `/api/auth/register` | 用户注册         |
-| POST | `/api/auth/login`    | 用户登录         |
-| GET  | `/api/posts`         | 获取所有文章列表 |
-| GET  | `/api/posts/:id`     | 获取单篇文章详情 |
+| 方法 | 路径                         | 说明                 |
+| ---- | ---------------------------- | -------------------- |
+| POST | `/api/auth/register`         | 用户注册             |
+| POST | `/api/auth/login`            | 用户登录             |
+| GET  | `/api/posts`                 | 获取文章列表（支持 keyword/categoryId/tagId 筛选 + page/pageSize 分页） |
+| GET  | `/api/posts/:id`             | 获取单篇文章详情                                                        |
+| GET  | `/api/categories`            | 获取分类列表（支持 name/slug 筛选 + page/pageSize 分页）                |
+| GET  | `/api/categories/:id`        | 根据 ID 获取分类详情                                                    |
+| GET  | `/api/categories/slug/:slug` | 根据 slug 获取分类详情                                                  |
+| GET  | `/api/tags`                  | 获取标签列表（支持 name/slug 筛选 + page/pageSize 分页）                |
+| GET  | `/api/tags/:id`              | 根据 ID 获取标签详情                                                    |
+| GET  | `/api/tags/slug/:slug`       | 根据 slug 获取标签详情                                                  |
 
 ### 需要认证（Authorization: Bearer <token>）
 
-| 方法   | 路径             | 说明                     |
-| ------ | ---------------- | ------------------------ |
-| GET    | `/api/auth/me`   | 获取当前登录用户信息     |
-| POST   | `/api/posts`     | 创建新文章               |
-| PUT    | `/api/posts/:id` | 更新文章（只能改自己的） |
-| DELETE | `/api/posts/:id` | 删除文章（只能删自己的） |
+| 方法   | 路径                             | 说明                     |
+| ------ | -------------------------------- | ------------------------ |
+| GET    | `/api/auth/me`                   | 获取当前登录用户信息     |
+| POST   | `/api/posts`                     | 创建新文章               |
+| PUT    | `/api/posts/:id`                 | 更新文章（只能改自己的） |
+| DELETE | `/api/posts/:id`                 | 删除文章（只能删自己的） |
+| POST   | `/api/categories`                | 创建新分类               |
+| PUT    | `/api/categories/:id`            | 更新分类                 |
+| DELETE | `/api/categories/:id`            | 删除分类                 |
+| POST   | `/api/tags`                      | 创建新标签               |
+| PUT    | `/api/tags/:id`                  | 更新标签                 |
+| DELETE | `/api/tags/:id`                  | 删除标签                 |
+| POST   | `/api/posts/:postId/tags`        | 为文章添加标签           |
+| DELETE | `/api/posts/:postId/tags/:tagId` | 从文章移除标签           |
 
 ### 响应格式
+
+**普通接口**：
 
 ```json
 {
@@ -149,6 +204,27 @@ node-practice-backend/
   "message": "可选描述"
 }
 ```
+
+**列表接口（分页）**：`GET /api/posts`、`GET /api/categories`、`GET /api/tags`
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [ ... ],
+    "pagination": {
+      "page": 1,
+      "pageSize": 10,
+      "total": 25,
+      "totalPages": 3
+    }
+  }
+}
+```
+
+分页默认值：`page=1`，`pageSize=10`，`pageSize` 最大 `100`。
+
+**slug 自动生成**：创建分类/标签时未传 `slug`，则通过 `pinyin-pro` 将 `name` 转为拼音 slug（如 `"技术"` → `ji-shu`）。
 
 ---
 
@@ -237,7 +313,34 @@ npm run docker:down      # docker-compose down
 
 ---
 
-## 11. 后续更新记录
+## 11. 更新维护规范（Skill）
+
+> 以下规范用于指导 AI 在后续开发中保持 agent.md 与项目同步。
+
+### 何时更新 agent.md
+
+- **新增功能模块**：新增 Controller / Service / 路由 / 模型时，必须同步更新：
+  - 第 3 节（项目结构）中的文件列表
+  - 第 5 节（数据库模型）中的表定义
+  - 第 6 节（API 路由）中的接口列表
+- **修改现有功能**：接口路径、方法、参数、权限变更时，同步更新：
+  - 第 6 节（API 路由）中的对应条目
+  - 第 12 节（后续更新记录）中的变更说明
+- **删除功能**：废弃接口或模块时，同步更新：
+  - 第 3 节（项目结构）中标记或移除对应文件
+  - 第 6 节（API 路由）中移除或标注已废弃
+  - 第 12 节（后续更新记录）中记录废弃原因
+
+### 更新顺序
+
+1. 先完成代码变更（Schema → Service → Controller → Route → App）
+2. 再更新 API 文档（docs/api/\*.md）
+3. **最后更新 agent.md**（确保所有变更已稳定）
+4. 数据库迁移完成后，在更新记录中标记迁移文件名
+
+---
+
+## 12. 后续更新记录
 
 <!-- 每次重大变更后在此记录，便于 AI 后续对话快速理解变更 -->
 
@@ -246,5 +349,33 @@ npm run docker:down      # docker-compose down
 - 初始生成 agent.md，项目包含完整的认证 + 文章 CRUD 功能
 - 后端三层架构已建立：Controller → Service → Prisma
 - 前端已实现登录/注册页面，路由守卫，JWT 自动注入
+
+### 2026-06-22
+
+- 新增分类（Category）和标签（Tag）功能模块
+- 数据库 schema 扩展：Post 关联 Category，Post 与 Tag 多对多关联
+- 新增 Service 层：`categoryService.ts`、`tagService.ts`
+- 新增 Controller 层：`categoryController.ts`、`tagController.ts`
+- 新增路由：`/api/categories/*`、`/api/tags/*` 及文章标签关联接口
+- 数据库迁移：`20260622155844_add_categories_and_tags`
+- 新增 API 文档：`docs/api/categories.md`、`docs/api/tags.md`
+- 更新 `docs/api/README.md` 索引
+
+### 2026-06-23
+
+- 分类/标签 slug 自动生成：未传 `slug` 时通过 `pinyin-pro` 将 `name` 转为拼音（新增 `src/utils/slug.ts`）
+- 列表接口支持筛选与分页：新增 `src/utils/query.ts`（`parsePagination`、`buildPaginatedResult` 等）
+- 文章列表：可选 `keyword`、`categoryId`、`tagId` + `page`/`pageSize`
+- 分类/标签列表：可选 `name`、`slug` + `page`/`pageSize`
+- 列表响应结构由数组改为 `{ items, pagination }`
+- 新增依赖：`pinyin-pro`
+- 同步更新 API 文档（`docs/api/posts.md`、`categories.md`、`tags.md`、`README.md`）
+
+### 2026-06-23（续）
+
+- 文章接口响应结构统一：列表/详情/创建/更新/删除均返回相同 `Post` 对象
+- 新增 `formatPost` 与统一 `postSelect` 查询字段（含 author、updatedAt、authorId、user 等）
+- `tags` 由嵌套 `{ tag: {...} }` 改为扁平数组，与前端 `Post` 类型对齐
+- 分类/标签更新：传入 `name` 但未传 `slug` 时，自动从 name 转拼音更新 slug
 
 ---

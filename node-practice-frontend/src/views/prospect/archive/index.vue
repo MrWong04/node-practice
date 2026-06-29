@@ -74,9 +74,9 @@ function goToDetail(id: number) {
 onMounted(async () => {
   loading.value = true
   try {
-    const res = await getAllPostsApi()
+    const res = await getAllPostsApi({ pageSize: 100 })
     if (res.success) {
-      posts.value = res.data
+      posts.value = res.data.items
     }
   } catch (err) {
     console.error('获取文章列表失败', err)
