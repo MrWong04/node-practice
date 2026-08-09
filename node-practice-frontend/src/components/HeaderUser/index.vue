@@ -36,6 +36,8 @@ import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { UserFilled, ArrowDown, Sunny, Moon } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
+import { removeToken } from '@/utils/auth'
 
 const props = withDefaults(
   defineProps<{
@@ -48,6 +50,7 @@ const props = withDefaults(
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const userName = computed(() => props.name)
 const isBackground = computed(() => route.path.startsWith('/background'))
@@ -102,7 +105,9 @@ const handleLogout = () => {
     type: 'warning'
   })
     .then(() => {
-      // TODO: 调用退出登录接口并清除登录态
+      // 清除本地登录态与用户信息
+      removeToken()
+      userStore.clearUser()
       ElMessage.success('已退出登录')
       router.push('/auth/login')
     })
