@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express'
+import os from 'node:os'
 import { PORT } from './config'
 import authRoutes from './routes/auth'
 import postRoutes from './routes/posts'
@@ -32,7 +33,22 @@ app.use(errorHandler)
 
 // 启动服务器
 app.listen(PORT, () => {
-  console.log(`🔐 Auth + Prisma server running on http://localhost:${PORT}`)
+  // 获取本机局域网 IP
+  const localIP = (() => {
+    const nets = os.networkInterfaces()
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] ?? []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          return net.address
+        }
+      }
+    }
+    return null
+  })()
+
+  console.log(`🔐 Auth + Prisma server running on:`)
+  console.log(`   Local:    http://localhost:${PORT}`)
+  if (localIP) console.log(`   Network:  http://${localIP}:${PORT}`)
   console.log('')
   console.log('Public endpoints:')
   console.log(`  POST   http://localhost:${PORT}/api/auth/register`)
