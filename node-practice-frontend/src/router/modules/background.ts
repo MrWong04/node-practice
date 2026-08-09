@@ -4,6 +4,10 @@ const backgroundRoutes: RouteRecordRaw[] = [
   {
     path: '/background',
     component: () => import('@/layout/background/index.vue'),
+    // 后台所有子页面均需登录，子路由通过 to.matched.some 继承该判断
+    meta: {
+      requiresAuth: true
+    },
     children: [
       {
         path: '',

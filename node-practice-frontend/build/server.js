@@ -4,7 +4,8 @@ export default {
   transpileDependencies: true,
   proxy: {
     '/local': {
-      target: 'http://localhost:3002',
+      // target: 'http://localhost:3002',
+      target: 'http://192.168.5.144:3002',
       changeOrigin: true,
       rewrite: (path) => path.replace(/^\/local/, '')
     }
