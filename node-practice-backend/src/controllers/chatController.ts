@@ -19,11 +19,7 @@ function parseId(raw: string | string[]): number {
 export async function createConversation(req: Request, res: Response, next: NextFunction) {
   try {
     const { title, firstMessage } = req.body ?? {}
-    const conversation = await chatService.createConversation(
-      req.user!.userId,
-      title,
-      firstMessage
-    )
+    const conversation = await chatService.createConversation(req.user!.userId, title, firstMessage)
     res.status(201).json(successResponse(conversation))
   } catch (err) {
     next(err)
@@ -43,10 +39,7 @@ export async function listConversations(req: Request, res: Response, next: NextF
 
 export async function getConversation(req: Request, res: Response, next: NextFunction) {
   try {
-    const conversation = await chatService.getConversation(
-      req.user!.userId,
-      parseId(req.params.id)
-    )
+    const conversation = await chatService.getConversation(req.user!.userId, parseId(req.params.id))
     res.json(successResponse(conversation))
   } catch (err) {
     next(err)

@@ -46,9 +46,7 @@ export async function createConversation(userId: number, title?: string, firstMe
 
     // 用首条消息生成标题（不额外调模型，控制成本）
     const generatedTitle =
-      content.length > TITLE_MAX_LENGTH
-        ? `${content.slice(0, TITLE_MAX_LENGTH)}…`
-        : content
+      content.length > TITLE_MAX_LENGTH ? `${content.slice(0, TITLE_MAX_LENGTH)}…` : content
     await prisma.conversation.update({
       where: { id: conversation.id },
       data: { title: generatedTitle },
