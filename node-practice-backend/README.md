@@ -121,6 +121,36 @@ npm run dev
 | DELETE | `/api/tags/:id`               | 删除标签     |
 | POST   | `/api/posts/:postId/tags`     | 为文章添加标签 |
 
+### AI 聊天接口（需认证）
+
+| 方法   | 路径                                          | 说明                            |
+| ------ | --------------------------------------------- | ------------------------------- |
+| POST   | `/api/chat/conversations`                     | 创建会话（可带 `firstMessage`） |
+| GET    | `/api/chat/conversations`                     | 会话列表（分页）                |
+| GET    | `/api/chat/conversations/:id`                 | 会话详情（含全部消息）          |
+| PATCH  | `/api/chat/conversations/:id`                 | 重命名会话                      |
+| DELETE | `/api/chat/conversations/:id`                 | 删除会话                        |
+| POST   | `/api/chat/conversations/:id/messages`        | 发送消息（**SSE 流式返回**）    |
+
+**SSE 事件格式**（发送消息接口）：
+
+```text
+event: user_message    # 用户消息入库回执，data 为该消息对象
+event: message         # AI 回复增量块，data: {"id": "...", "content": "..."}
+event: done            # 回复结束，data: {"messageId": 123}
+event: error           # 出错，data: {"message": "错误说明"}
+```
+
+**环境变量**（AI 聊天功能）：
+
+```bash
+DEEPSEEK_API_KEY=sk-xxxx          # DeepSeek 平台 API Key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+> 说明：未配置 `DEEPSEEK_API_KEY` 时，发送消息接口会返回 SSE `error` 事件，其余功能（会话/消息 CRUD）不受影响。
+
 ## Docker 部署
 
 ```bash

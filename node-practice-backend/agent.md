@@ -115,6 +115,7 @@ node-practice-backend/
 - `createdAt`: DateTime
 - `updatedAt`: DateTime
 - **关联**：`posts Post[]`（一个用户多篇文章）
+- **关联**：`conversations Conversation[]`（一个用户多个 AI 聊天会话）
 
 ### Post 表
 
@@ -157,6 +158,27 @@ node-practice-backend/
 - **关联**：`post Post` @relation（onDelete: Cascade）
 - **关联**：`tag Tag` @relation（onDelete: Cascade）
 
+### Conversation 表（AI 聊天会话）
+
+- `id`: Int @id @default(autoincrement())
+- `title`: String @default("新对话")（首条消息自动截断生成）
+- `userId`: Int @map("user_id")
+- `createdAt`: DateTime
+- `updatedAt`: DateTime
+- **索引**：`@@index([userId])`
+- **关联**：`user User` @relation（onDelete: Cascade）
+- **关联**：`messages Message[]`（一个会话多条消息）
+
+### Message 表（聊天消息）
+
+- `id`: Int @id @default(autoincrement())
+- `conversationId`: Int @map("conversation_id")
+- `role`: String（`"user"` | `"assistant"`）
+- `content`: String @db.Text
+- `createdAt`: DateTime
+- **索引**：`@@index([conversationId])`
+- **关联**：`conversation Conversation` @relation（onDelete: Cascade）
+
 ---
 
 ## 6. API 路由
@@ -192,6 +214,30 @@ node-practice-backend/
 | DELETE | `/api/tags/:id`                  | 删除标签                 |
 | POST   | `/api/posts/:postId/tags`        | 为文章添加标签           |
 | DELETE | `/api/posts/:postId/tags/:tagId` | 从文章移除标签           |
+| POST   | `/api/chat/conversations`        | 创建会话（可带 `firstMessage`） |
+| GET    | `/api/chat/conversations`        | 会话列表（page/pageSize 分页）  |
+| GET    | `/api/chat/conversations/:id`    | 会话详情（含全部消息）          |
+| PATCH  | `/api/chat/conversations/:id`    | 重命名会话                      |
+| DELETE | `/api/chat/conversations/:id`    | 删除会话（级联删消息）          |
+| POST   | `/api/chat/conversations/:id/messages` | 发送消息（**SSE 流式**） |
+
+### AI 聊天 SSE 事件格式（POST /api/chat/conversations/:id/messages）
+
+```text
+event: user_message   # 用户消息入库回执
+data: {"id":2,"role":"user","content":"..."}
+
+event: message        # AI 回复增量块
+data: {"id":"...","content":"增量文本"}
+
+event: done           # 回复完整结束
+data: {"messageId":123}
+
+event: error          # 上游出错（如未配置 API Key）
+data: {"message":"..."}
+```
+
+**上下文策略**：发送消息时仅携带该会话最近 20 条消息（`MAX_CONTEXT_MESSAGES`，config 可调），控制 token 成本；标题由首条消息截断 20 字符生成，不额外调用模型。
 
 ### 响应格式
 
@@ -238,6 +284,9 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=7d
 BCRYPT_SALT_ROUNDS=10
 CORS_ORIGIN="http://localhost:5173"
+DEEPSEEK_API_KEY=sk-xxxx          # DeepSeek 平台 API Key（聊天功能必填）
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
 ```
 
 ---
