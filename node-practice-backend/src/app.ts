@@ -5,6 +5,7 @@ import authRoutes from './routes/auth'
 import postRoutes from './routes/posts'
 import categoryRoutes from './routes/categories'
 import tagRoutes from './routes/tags'
+import chatRoutes from './routes/chat'
 import { errorHandler } from './middleware/errorHandler'
 
 const app = express()
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/tags', tagRoutes)
+app.use('/api/chat', chatRoutes)
 
 // ============================================
 // 全局错误处理
@@ -75,4 +77,12 @@ app.listen(PORT, () => {
   console.log(`  DELETE http://localhost:${PORT}/api/tags/:id`)
   console.log(`  POST   http://localhost:${PORT}/api/posts/:postId/tags`)
   console.log(`  DELETE http://localhost:${PORT}/api/posts/:postId/tags/:tagId`)
+  console.log('')
+  console.log('AI Chat endpoints (need Authorization header):')
+  console.log(`  POST   http://localhost:${PORT}/api/chat/conversations`)
+  console.log(`  GET    http://localhost:${PORT}/api/chat/conversations`)
+  console.log(`  GET    http://localhost:${PORT}/api/chat/conversations/:id`)
+  console.log(`  PATCH  http://localhost:${PORT}/api/chat/conversations/:id`)
+  console.log(`  DELETE http://localhost:${PORT}/api/chat/conversations/:id`)
+  console.log(`  POST   http://localhost:${PORT}/api/chat/conversations/:id/messages  (SSE 流式)`)
 })
