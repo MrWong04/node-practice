@@ -46,6 +46,9 @@ model User {
   // 关联：一个用户有多篇文章
   posts     Post[]
 
+  // 关联：一个用户有多个 AI 聊天会话
+  conversations Conversation[]
+
   @@map("users")
 }
 
@@ -90,4 +93,31 @@ model PostTag {
 
   @@unique([postId, tagId])
   @@map("post_tags")
+}
+
+// AI 聊天会话
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  title     String    @default("新对话")
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("conversations")
+}
+
+// 聊天消息
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int          @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // "user" | "assistant"
+  content        String       @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([conversationId])
+  @@map("messages")
 }
