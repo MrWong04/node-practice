@@ -2,6 +2,13 @@
 // 全局配置 — 集中读取环境变量，避免硬编码散布在各处
 // ==========================================================================
 
+// 显式加载 .env（Node 20.12+ 内置），避免依赖 Prisma 隐式加载的时序
+try {
+  process.loadEnvFile()
+} catch {
+  // .env 不存在时忽略（如生产容器环境变量已注入）
+}
+
 export const PORT = parseInt(process.env.PORT || '3002', 10)
 
 export const SALT_ROUNDS = 10
