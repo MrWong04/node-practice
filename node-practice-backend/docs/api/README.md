@@ -11,7 +11,8 @@ docs/api/
 ├── auth.md            # 认证模块：注册 / 登录 / 获取当前用户
 ├── posts.md           # 文章模块：文章的增删改查
 ├── categories.md      # 分类模块：分类的增删改查
-└── tags.md            # 标签模块：标签的增删改查及文章标签关联
+├── tags.md            # 标签模块：标签的增删改查及文章标签关联
+└── chat.md            # 聊天模块：AI 会话 CRUD + SSE 流式消息（含前端调试指南）
 ```
 
 ## 模块概览
@@ -22,6 +23,7 @@ docs/api/
 | 文章 (Posts)      | [`posts.md`](./posts.md)           | 公开文章列表/详情（列表支持筛选与分页）、创建/更新/删除文章（后三者需登录） |
 | 分类 (Categories) | [`categories.md`](./categories.md) | 公开分类列表/详情（列表支持筛选与分页）、创建/更新/删除分类（后三者需登录） |
 | 标签 (Tags)       | [`tags.md`](./tags.md)             | 公开标签列表/详情（列表支持筛选与分页）、创建/更新/删除标签、文章标签关联（需登录） |
+| 聊天 (Chat)       | [`chat.md`](./chat.md)             | AI 聊天：会话 CRUD + 消息持久化 + DeepSeek SSE 流式回复（全部需登录，含前端调试指南） |
 
 ## 快速索引
 
@@ -51,6 +53,13 @@ docs/api/
   - [`DELETE /api/tags/:id`](./tags.md#delete-apitagsid)
   - [`POST /api/posts/:postId/tags`](./tags.md#post-apipostspostidtags)
   - [`DELETE /api/posts/:postId/tags/:tagId`](./tags.md#delete-apipostspostidtagstagid)
+- **聊天**
+  - [`POST /api/chat/conversations`](./chat.md#31-post-apichatconversations)
+  - [`GET /api/chat/conversations`](./chat.md#32-get-apichatconversations)
+  - [`GET /api/chat/conversations/:id`](./chat.md#33-get-apichatconversationsid)
+  - [`PATCH /api/chat/conversations/:id`](./chat.md#34-patch-apichatconversationsid)
+  - [`DELETE /api/chat/conversations/:id`](./chat.md#35-delete-apichatconversationsid)
+  - [`POST /api/chat/conversations/:id/messages`](./chat.md#36-post-apichatconversationsidmessages)
 
 ## 通用响应格式
 
