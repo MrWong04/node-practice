@@ -144,12 +144,14 @@ event: error           # 出错，data: {"message": "错误说明"}
 **环境变量**（AI 聊天功能）：
 
 ```bash
-DEEPSEEK_API_KEY=sk-xxxx          # DeepSeek 平台 API Key
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_API_KEY=sk-xxxx                    # DeepSeek 平台（或商汤代理）API Key
+DEEPSEEK_BASE_URL=https://token.sensenova.cn/v1   # 商汤日日新代理端点（当前启用）
+# DEEPSEEK_BASE_URL=https://api.deepseek.com     # 或 DeepSeek 官方端点
+DEEPSEEK_MODEL=deepseek-v4-flash            # 当前模型（商汤端点）
+# DEEPSEEK_MODEL=deepseek-chat              # 官方端点模型
 ```
 
-> 说明：未配置 `DEEPSEEK_API_KEY` 时，发送消息接口会返回 SSE `error` 事件，其余功能（会话/消息 CRUD）不受影响。
+> 说明：当前项目实际使用**商汤日日新代理端点**（`token.sensenova.cn` + `deepseek-v4-flash`），`.env` 已配置。未配置 `DEEPSEEK_API_KEY` 时，发送消息接口会返回 SSE `error` 事件，其余功能（会话/消息 CRUD）不受影响。
 
 ## Docker 部署
 

@@ -284,9 +284,9 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=7d
 BCRYPT_SALT_ROUNDS=10
 CORS_ORIGIN="http://localhost:5173"
-DEEPSEEK_API_KEY=sk-xxxx          # DeepSeek 平台 API Key（聊天功能必填）
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_API_KEY=sk-xxxx          # DeepSeek 平台 / 商汤代理 API Key（聊天功能必填）
+DEEPSEEK_BASE_URL=https://token.sensenova.cn/v1   # 商汤日日新代理端点（当前启用）
+DEEPSEEK_MODEL=deepseek-v4-flash  # 商汤端点模型
 ```
 
 ---

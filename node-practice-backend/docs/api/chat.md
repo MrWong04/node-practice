@@ -33,11 +33,11 @@ Token 获取方式：`POST /api/auth/register`（注册）或 `POST /api/auth/lo
 
 | 变量 | 说明 | 当前状态 |
 | --- | --- | --- |
-| `DEEPSEEK_API_KEY` | DeepSeek 平台 API Key，必填才能收到真实 AI 回复 | ⚠️ **尚未配置** |
-| `DEEPSEEK_BASE_URL` | API 地址，默认 `https://api.deepseek.com` | 已就绪 |
-| `DEEPSEEK_MODEL` | 模型名，默认 `deepseek-chat` | 已就绪 |
+| `DEEPSEEK_API_KEY` | DeepSeek 平台 / 商汤代理 API Key，必填才能收到真实 AI 回复 | ✅ **已配置**（商汤） |
+| `DEEPSEEK_BASE_URL` | API 地址，当前用商汤 `https://token.sensenova.cn/v1` | ✅ 已就绪 |
+| `DEEPSEEK_MODEL` | 模型名，当前 `deepseek-v4-flash`（商汤端点） | ✅ 已就绪 |
 
-> ⚠️ **未配置 `DEEPSEEK_API_KEY` 时**：发送消息接口会正常走 SSE 流程，但最终返回 `error` 事件（详见 §4.3）。会话/消息的 CRUD 不受影响。**这不是 Bug，是预期的降级行为**，前端需按"失败态"处理。
+> ✅ 当前环境已配置商汤日日新代理端点，可收到**真实 AI 回复**（2026-08-09 端到端验证通过）。若改用官方端点：`DEEPSEEK_BASE_URL=https://api.deepseek.com`、`DEEPSEEK_MODEL=deepseek-chat`。
 
 ---
 
@@ -315,9 +315,9 @@ async function sendMessage(conversationId, content, token, handlers) {
 }
 ```
 
-### 4.3 无 API Key 时的预期输出
+### 4.3 无 API Key 时的预期输出（降级行为）
 
-当前环境未配置 `DEEPSEEK_API_KEY`，发送消息会得到：
+正常情况下（已配置 Key）发送消息会收到 `message` 增量 + `done` 收尾。**若 `DEEPSEEK_API_KEY` 未配置或 Key 无效**，发送消息会得到：
 
 ```text
 event: user_message
@@ -325,7 +325,6 @@ data: {"id":2,"conversationId":1,"role":"user","content":"...","createdAt":"..."
 
 event: error
 data: {"message":"服务端未配置 DEEPSEEK_API_KEY，请先在 .env 中配置"}
-
 ```
 
 **前端处理建议**：收到 `error` 事件 → 隐藏"正在输入"状态 → 保留用户消息 → 气泡内展示错误提示 + 重试按钮。
@@ -366,7 +365,7 @@ curl -X PATCH http://localhost:3002/api/chat/conversations/<CONV_ID> \
   -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
   -d '{"title":"调试会话"}'
 
-# Step 6: 发送消息（观察 SSE 流；未配 Key 时以 error 事件结束）
+# Step 6: 发送消息（观察 SSE 流；正常应收到 message 增量 + done）
 curl -N -X POST http://localhost:3002/api/chat/conversations/<CONV_ID>/messages \
   -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
